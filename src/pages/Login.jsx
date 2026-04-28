@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { LogIn, School, User, Lock, Mail } from 'lucide-react';
+import { LogIn, User, Lock, Mail } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import logoImg from '../assets/logo.png';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -45,18 +46,11 @@ const Login = () => {
         style={{ width: '100%', maxWidth: '450px' }}
       >
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <div style={{ 
-            display: 'inline-flex', 
-            padding: '1rem', 
-            background: 'var(--primary-color)', 
-            borderRadius: 'var(--radius-lg)',
-            marginBottom: '1rem'
-          }}>
-            <School size={40} color="white" />
-          </div>
+          <img src={logoImg} alt="Agtarise Solutions Logo" style={{ width: '120px', height: 'auto', marginBottom: '1rem' }} />
           <h2 style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>Agtarise <span className="text-gradient">SMS</span></h2>
           <p style={{ color: 'var(--text-muted)' }}>Sign in to manage your school excellence</p>
         </div>
+
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>

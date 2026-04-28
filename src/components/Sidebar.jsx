@@ -17,6 +17,7 @@ import {
   CalendarDays
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import logoImg from '../assets/logo.png';
 
 const Sidebar = () => {
   const { user, logout } = useAuth();
@@ -57,9 +58,7 @@ const Sidebar = () => {
       zIndex: 100
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '3rem', padding: '0 1rem' }}>
-        <div style={{ padding: '0.5rem', background: 'var(--primary-color)', borderRadius: 'var(--radius-md)' }}>
-          <BookOpen size={24} color="white" />
-        </div>
+        <img src={logoImg} alt="Logo" style={{ width: '40px', height: 'auto', borderRadius: '50%' }} />
         <h2 style={{ fontSize: '1.25rem', fontWeight: '700' }}>Agtarise <span className="text-gradient">SMS</span></h2>
       </div>
 
