@@ -12,6 +12,7 @@ const StaffList = () => {
   const [newStaff, setNewStaff] = useState({
     name: '', role: 'Teacher', subject: '', email: '', phone: '',
     dob: '', maritalStatus: 'Single', address: '', nationality: 'Nigerian',
+    assignedClass: 'SS3 A',
     nextOfKinName: '', nextOfKinPhone: '', nextOfKinAddress: ''
   });
 
@@ -49,6 +50,7 @@ const StaffList = () => {
         maritalStatus: newStaff.maritalStatus,
         address: newStaff.address,
         nationality: newStaff.nationality,
+        assignedClass: newStaff.assignedClass,
         nextOfKin: {
           name: newStaff.nextOfKinName,
           phone: newStaff.nextOfKinPhone,
@@ -62,6 +64,7 @@ const StaffList = () => {
       setNewStaff({
         name: '', role: 'Teacher', subject: '', email: '', phone: '',
         dob: '', maritalStatus: 'Single', address: '', nationality: 'Nigerian',
+        assignedClass: 'SS3 A',
         nextOfKinName: '', nextOfKinPhone: '', nextOfKinAddress: ''
       });
       fetchStaff();
@@ -84,14 +87,16 @@ const StaffList = () => {
   const generatePDF = () => {
     const doc = new jsPDF();
     doc.text('Staff Directory Report', 14, 15);
-    const tableData = staff.map(s => [s.staffId || s.id, s.name, s.role, s.subject, s.email]);
+    const tableData = staff.map(s => [s.staffId || s.id, s.name, s.role, s.assignedClass || '-', s.email]);
     autoTable(doc, {
-      head: [['ID', 'Name', 'Role', 'Department', 'Email']],
+      head: [['ID', 'Name', 'Role', 'Assigned Class', 'Email']],
       body: tableData,
       startY: 20,
     });
     doc.save('staff_directory.pdf');
   };
+
+  const classes = ['JSS 1 A', 'JSS 2 B', 'SS1 C', 'SS2 A', 'SS3 A'];
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
@@ -151,7 +156,9 @@ const StaffList = () => {
                   </div>
                   <div>
                     <h3 style={{ fontSize: '1.1rem', paddingRight: '1.5rem' }}>{member.name}</h3>
-                    <span style={{ fontSize: '0.8rem', color: 'var(--primary-color)', fontWeight: '600' }}>{member.role}</span>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--primary-color)', fontWeight: '600' }}>
+                      {member.role} {member.assignedClass && `(${member.assignedClass})`}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -237,6 +244,17 @@ const StaffList = () => {
                   <option value="Accountant">Accountant</option>
                 </select>
               </div>
+
+              {newStaff.role === 'Teacher' && (
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Assigned Class</label>
+                  <select value={newStaff.assignedClass} onChange={e => setNewStaff({...newStaff, assignedClass: e.target.value})} style={{ width: '100%', padding: '0.75rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'white' }}>
+                    {classes.map(cls => (
+                      <option key={cls} value={cls}>{cls}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
               
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Subject/Department</label>

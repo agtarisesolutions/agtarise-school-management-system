@@ -12,6 +12,7 @@ const Login = () => {
   const [role, setRole] = useState('admin');
   const [name, setName] = useState('');
   const [schoolName, setSchoolName] = useState('');
+  const [assignedClass, setAssignedClass] = useState('SS3 A');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { login, signup } = useAuth();
@@ -24,7 +25,11 @@ const Login = () => {
 
     try {
       if (isRegistering) {
-        await signup(email, password, { role, name, schoolName });
+        const userData = { role, name, schoolName };
+        if (role === 'teacher') {
+          userData.assignedClass = assignedClass;
+        }
+        await signup(email, password, userData);
       } else {
         await login(email, password);
       }
@@ -36,6 +41,8 @@ const Login = () => {
       setLoading(false);
     }
   };
+
+  const classes = ['JSS 1 A', 'JSS 2 B', 'SS1 C', 'SS2 A', 'SS3 A'];
 
   return (
     <div style={{ 
@@ -77,6 +84,27 @@ const Login = () => {
                   <input type="text" placeholder="Agtarise Academy" value={schoolName} onChange={(e) => setSchoolName(e.target.value)} style={{ width: '100%', padding: '0.75rem 1rem 0.75rem 3rem', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'white', outline: 'none' }} required />
                 </div>
               </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <label style={{ fontSize: '0.9rem', fontWeight: '500' }}>Select Role</label>
+                <select value={role} onChange={(e) => setRole(e.target.value)} style={{ width: '100%', padding: '0.75rem 1rem', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'white', outline: 'none' }}>
+                  <option value="admin">Administrator</option>
+                  <option value="teacher">Teacher</option>
+                  <option value="student">Student</option>
+                  <option value="parent">Parent</option>
+                </select>
+              </div>
+
+              {role === 'teacher' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  <label style={{ fontSize: '0.9rem', fontWeight: '500' }}>Assigned Class</label>
+                  <select value={assignedClass} onChange={(e) => setAssignedClass(e.target.value)} style={{ width: '100%', padding: '0.75rem 1rem', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'white', outline: 'none' }}>
+                    {classes.map(cls => (
+                      <option key={cls} value={cls}>{cls}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </>
           )}
 
@@ -84,7 +112,7 @@ const Login = () => {
             <label style={{ fontSize: '0.9rem', fontWeight: '500' }}>Email Address</label>
             <div style={{ position: 'relative' }}>
               <Mail style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} size={18} />
-              <input type="email" placeholder="admin@school.com" value={email} onChange={(e) => setEmail(e.target.value)} style={{ width: '100%', padding: '0.75rem 1rem 0.75rem 3rem', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'white', outline: 'none' }} required />
+              <input type="email" placeholder="email@example.com" value={email} onChange={(e) => setEmail(e.target.value)} style={{ width: '100%', padding: '0.75rem 1rem 0.75rem 3rem', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'white', outline: 'none' }} required />
             </div>
           </div>
 
@@ -96,20 +124,8 @@ const Login = () => {
             </div>
           </div>
 
-          {isRegistering && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <label style={{ fontSize: '0.9rem', fontWeight: '500' }}>Select Role</label>
-              <select value={role} onChange={(e) => setRole(e.target.value)} style={{ width: '100%', padding: '0.75rem 1rem', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'white', outline: 'none' }}>
-                <option value="admin">Administrator</option>
-                <option value="teacher">Teacher</option>
-                <option value="student">Student</option>
-                <option value="parent">Parent</option>
-              </select>
-            </div>
-          )}
-
           <button type="submit" className="btn-primary" style={{ justifyContent: 'center', width: '100%', marginTop: '1rem' }} disabled={loading}>
-            <LogIn size={20} /> {isRegistering ? 'Register' : 'Sign In'}
+            <LogIn size={20} /> {isRegistering ? 'Register Account' : 'Sign In'}
           </button>
         </form>
 
