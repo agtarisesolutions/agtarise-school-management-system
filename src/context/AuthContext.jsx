@@ -16,28 +16,35 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        // Fetch additional user data (role, schoolName) from Firestore
-        const userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
-        if (userDoc.exists()) {
-          setUser({
-            uid: firebaseUser.uid,
-            email: firebaseUser.email,
-            ...userDoc.data()
-          });
+      try {
+        if (firebaseUser) {
+          // Fetch additional user data (role, schoolName) from Firestore
+          const userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
+          if (userDoc.exists()) {
+            setUser({
+              uid: firebaseUser.uid,
+              email: firebaseUser.email,
+              ...userDoc.data()
+            });
+          } else {
+            // Fallback if doc doesn't exist yet
+            setUser({
+              uid: firebaseUser.uid,
+              email: firebaseUser.email,
+              role: 'student', // default
+              name: firebaseUser.displayName || 'User'
+            });
+          }
         } else {
-          // Fallback if doc doesn't exist yet
-          setUser({
-            uid: firebaseUser.uid,
-            email: firebaseUser.email,
-            role: 'student', // default
-            name: firebaseUser.displayName || 'User'
-          });
+          setUser(null);
         }
-      } else {
+      } catch (error) {
+        console.error("Auth initialization error:", error);
+        // On error, we still want to stop loading
         setUser(null);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     return () => unsubscribe();

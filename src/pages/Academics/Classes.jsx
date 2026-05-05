@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Search, MoreVertical, Edit2, Trash2, Download, TrendingUp, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { collection, getDocs, addDoc, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '../../firebase';
 
 const Classes = () => {
+  const navigate = useNavigate();
   const [filter, setFilter] = useState('All');
   const [classes, setClasses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -82,7 +84,7 @@ const Classes = () => {
           <p style={{ color: 'var(--text-muted)' }}>Manage and organize classes across all school levels.</p>
         </div>
         <div style={{ display: 'flex', gap: '1rem' }}>
-          <button onClick={() => window.location.href='/academics/promote'} className="btn-primary" style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'white' }}>
+          <button onClick={() => navigate('/academics/promote')} className="btn-primary" style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'white' }}>
             <TrendingUp size={18} /> Promote Students
           </button>
           <button onClick={generatePDF} style={{ 

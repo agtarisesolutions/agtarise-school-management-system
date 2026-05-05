@@ -1,27 +1,44 @@
-import React from 'react';
-import { Wallet, DollarSign, Download, CheckCircle, Clock, AlertCircle, Plus, Search } from 'lucide-react';
+import React, { useState } from 'react';
+import { Wallet, DollarSign, Download, CheckCircle, Clock, AlertCircle, Plus, Search, X } from 'lucide-react';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 const Payroll = () => {
-  const payrollData = [
+  const [searchTerm, setSearchTerm] = useState('');
+  const [payrollData, setPayrollData] = useState([
     { id: 'PAY001', name: 'Dr. Smith', baseSalary: '₦450,000', allowances: '₦50,000', tax: '₦45,000', netPay: '₦455,000', status: 'Paid' },
     { id: 'PAY002', name: 'Mrs. Adebayo', baseSalary: '₦250,000', allowances: '₦20,000', tax: '₦25,000', netPay: '₦245,000', status: 'Paid' },
     { id: 'PAY003', name: 'Mr. Okoro', baseSalary: '₦220,000', allowances: '₦15,000', tax: '₦22,000', netPay: '₦213,000', status: 'Pending' },
     { id: 'PAY004', name: 'Miss Chima', baseSalary: '₦210,000', allowances: '₦15,000', tax: '₦21,000', netPay: '₦204,000', status: 'Paid' },
     { id: 'PAY005', name: 'Mr. Yusuf', baseSalary: '₦300,000', allowances: '₦30,000', tax: '₦30,000', netPay: '₦300,000', status: 'Pending' },
-  ];
+  ]);
+
+  const handleDisburse = () => {
+    if (window.confirm("Are you sure you want to disburse salaries for the remaining 2 staff members?")) {
+      setPayrollData(payrollData.map(p => ({ ...p, status: 'Paid' })));
+      alert("Salaries disbursed successfully!");
+    }
+  };
 
   const generatePDF = () => {
     const doc = new jsPDF();
     doc.text('Staff Payroll Report - April 2026', 14, 15);
     const tableData = payrollData.map(p => [p.name, p.baseSalary, p.allowances, p.tax, p.netPay, p.status]);
-    doc.autoTable({
+    autoTable(doc, {
       head: [['Staff Name', 'Base Salary', 'Allowances', 'Tax/Deductions', 'Net Pay', 'Status']],
       body: tableData,
       startY: 20,
     });
     doc.save('payroll_report_april_2026.pdf');
+  };
+
+  const filteredPayroll = payrollData.filter(p => 
+    p.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const stats = {
+    total: '₦1.4M',
+    pendingCount: payrollData.filter(p => p.status === 'Pending').length
   };
 
   return (
@@ -35,7 +52,7 @@ const Payroll = () => {
           <button onClick={generatePDF} className="btn-primary" style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'white' }}>
             <Download size={18} /> Export Payroll
           </button>
-          <button className="btn-primary">
+          <button className="btn-primary" onClick={handleDisburse}>
             <Wallet size={18} /> Disburse Salaries
           </button>
         </div>
@@ -43,9 +60,9 @@ const Payroll = () => {
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
         {[
-          { label: 'Total Payroll', value: '₦1.4M', icon: <DollarSign color="var(--primary-color)" />, status: 'Monthly' },
-          { label: 'Disbursed', value: '₦904k', icon: <CheckCircle color="var(--success)" />, status: '65% Complete' },
-          { label: 'Pending', value: '₦513k', icon: <Clock color="var(--warning)" />, status: '2 Staff' },
+          { label: 'Total Payroll', value: stats.total, icon: <DollarSign color="var(--primary-color)" />, status: 'Monthly' },
+          { label: 'Disbursed', value: '₦904k', icon: <CheckCircle color="var(--success)" />, status: 'Calculated' },
+          { label: 'Pending', value: stats.pendingCount, icon: <Clock color="var(--warning)" />, status: 'Staff' },
         ].map((stat, i) => (
           <div key={i} className="glass-card" style={{ padding: '1.5rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
@@ -66,6 +83,8 @@ const Payroll = () => {
             <input 
               type="text" 
               placeholder="Search staff name..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
               style={{
                 width: '100%',
                 padding: '0.5rem 0.75rem 0.5rem 2.2rem',
@@ -93,7 +112,7 @@ const Payroll = () => {
             </tr>
           </thead>
           <tbody>
-            {payrollData.map((row) => (
+            {filteredPayroll.map((row) => (
               <tr key={row.id} style={{ borderBottom: '1px solid var(--glass-border)' }}>
                 <td style={{ padding: '1rem', fontWeight: '600' }}>{row.name}</td>
                 <td style={{ padding: '1rem' }}>{row.baseSalary}</td>
@@ -113,7 +132,7 @@ const Payroll = () => {
                   </div>
                 </td>
                 <td style={{ padding: '1rem', textAlign: 'right' }}>
-                  <button style={{ background: 'transparent', border: 'none', color: 'var(--primary-color)', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600' }}>Pay Slip</button>
+                  <button onClick={() => alert(`Generating pay slip for ${row.name}...`)} style={{ background: 'transparent', border: 'none', color: 'var(--primary-color)', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600' }}>Pay Slip</button>
                 </td>
               </tr>
             ))}

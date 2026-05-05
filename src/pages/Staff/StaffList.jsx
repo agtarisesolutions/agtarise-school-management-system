@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { UserPlus, Search, Mail, Phone, BookOpen, MoreVertical, Download, X, Trash2 } from 'lucide-react';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import { collection, getDocs, addDoc, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '../../firebase';
 
@@ -85,7 +85,7 @@ const StaffList = () => {
     const doc = new jsPDF();
     doc.text('Staff Directory Report', 14, 15);
     const tableData = staff.map(s => [s.staffId || s.id, s.name, s.role, s.subject, s.email]);
-    doc.autoTable({
+    autoTable(doc, {
       head: [['ID', 'Name', 'Role', 'Department', 'Email']],
       body: tableData,
       startY: 20,

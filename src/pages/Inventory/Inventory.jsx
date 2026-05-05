@@ -1,23 +1,41 @@
 import React, { useState } from 'react';
-import { Package, Plus, Search, Filter, AlertTriangle, CheckCircle, Download, User } from 'lucide-react';
+import { Package, Plus, Search, Filter, AlertTriangle, CheckCircle, Download, User, X } from 'lucide-react';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
 const Inventory = () => {
   const [searchTerm, setSearchTerm] = useState('');
-
-  const inventoryItems = [
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [items, setItems] = useState([
     { id: 'INV001', name: 'Mathematics Textbook (SS3)', category: 'Books', quantity: 150, sold: 120, price: '₦4,500', staff: 'Mrs. Adebayo' },
     { id: 'INV002', name: 'School Uniform (Junior)', category: 'Apparel', quantity: 200, sold: 185, price: '₦8,500', staff: 'Mr. Yusuf' },
     { id: 'INV003', name: 'A4 Exercise Books (60 Leaves)', category: 'Stationery', quantity: 1000, sold: 850, price: '₦250', staff: 'Mr. Yusuf' },
     { id: 'INV004', name: 'Geometry Set', category: 'Stationery', quantity: 100, sold: 95, price: '₦1,200', staff: 'Mrs. Adebayo' },
     { id: 'INV005', name: 'School Bag (Premium)', category: 'Bags', quantity: 50, sold: 10, price: '₦12,000', staff: 'Mr. Yusuf' },
-  ];
+  ]);
+
+  const [newItem, setNewItem] = useState({
+    name: '', category: 'Stationery', quantity: '', price: '', staff: ''
+  });
+
+  const handleAddItem = (e) => {
+    e.preventDefault();
+    const item = {
+      id: `INV00${items.length + 1}`,
+      ...newItem,
+      quantity: parseInt(newItem.quantity),
+      sold: 0,
+      price: `₦${newItem.price.toLocaleString()}`
+    };
+    setItems([item, ...items]);
+    setShowAddModal(false);
+    setNewItem({ name: '', category: 'Stationery', quantity: '', price: '', staff: '' });
+  };
 
   const generatePDF = () => {
     const doc = new jsPDF();
     doc.text('Inventory & Stationery Report', 14, 15);
-    const tableData = inventoryItems.map(item => [
+    const tableData = items.map(item => [
       item.name, 
       item.category, 
       item.quantity, 
@@ -33,6 +51,12 @@ const Inventory = () => {
     });
     doc.save('inventory_report.pdf');
   };
+
+  const filteredItems = items.filter(item => 
+    item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.staff.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
@@ -55,7 +79,7 @@ const Inventory = () => {
           }}>
             <Download size={18} /> Export PDF
           </button>
-          <button className="btn-primary">
+          <button className="btn-primary" onClick={() => setShowAddModal(true)}>
             <Plus size={20} /> Add New Item
           </button>
         </div>
@@ -99,19 +123,6 @@ const Inventory = () => {
               }}
             />
           </div>
-          <button style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '0.5rem', 
-            padding: '0.6rem 1rem', 
-            background: 'var(--glass-bg)', 
-            border: '1px solid var(--glass-border)',
-            borderRadius: 'var(--radius-md)',
-            color: 'white',
-            cursor: 'pointer'
-          }}>
-            <Filter size={16} /> Category
-          </button>
         </div>
 
         <div style={{ overflowX: 'auto' }}>
@@ -129,7 +140,7 @@ const Inventory = () => {
               </tr>
             </thead>
             <tbody>
-              {inventoryItems.map((item) => {
+              {filteredItems.map((item) => {
                 const remaining = item.quantity - item.sold;
                 const isLow = remaining < 20;
                 return (
@@ -166,6 +177,51 @@ const Inventory = () => {
           </table>
         </div>
       </div>
+
+      {showAddModal && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
+          background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
+        }}>
+          <div className="glass-card" style={{ width: '100%', maxWidth: '450px', padding: '2rem', position: 'relative' }}>
+            <button onClick={() => setShowAddModal(false)} style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'transparent', border: 'none', color: 'white', cursor: 'pointer' }}>
+              <X size={24} />
+            </button>
+            <h2 style={{ marginBottom: '1.5rem' }}>Add Inventory Item</h2>
+            <form onSubmit={handleAddItem} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Item Name</label>
+                <input required type="text" value={newItem.name} onChange={e => setNewItem({...newItem, name: e.target.value})} style={{ width: '100%', padding: '0.75rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'white' }} />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Category</label>
+                <select value={newItem.category} onChange={e => setNewItem({...newItem, category: e.target.value})} style={{ width: '100%', padding: '0.75rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'white' }}>
+                  <option value="Books">Books</option>
+                  <option value="Apparel">Apparel</option>
+                  <option value="Stationery">Stationery</option>
+                  <option value="Bags">Bags</option>
+                </select>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Quantity</label>
+                  <input required type="number" value={newItem.quantity} onChange={e => setNewItem({...newItem, quantity: e.target.value})} style={{ width: '100%', padding: '0.75rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'white' }} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Price (₦)</label>
+                  <input required type="number" value={newItem.price} onChange={e => setNewItem({...newItem, price: e.target.value})} style={{ width: '100%', padding: '0.75rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'white' }} />
+                </div>
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Staff In-Charge</label>
+                <input required type="text" value={newItem.staff} onChange={e => setNewItem({...newItem, staff: e.target.value})} style={{ width: '100%', padding: '0.75rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'white' }} />
+              </div>
+              <button type="submit" className="btn-primary" style={{ marginTop: '1rem', justifyContent: 'center' }}>Save Item</button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

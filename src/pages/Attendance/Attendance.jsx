@@ -1,29 +1,56 @@
 import React, { useState } from 'react';
-import { Calendar, Search, CheckCircle, XCircle, Clock, Filter, Download } from 'lucide-react';
+import { Calendar, Search, CheckCircle, XCircle, Clock, Filter, Download, X } from 'lucide-react';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 const Attendance = () => {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
-
-  const attendanceData = [
+  const [searchTerm, setSearchTerm] = useState('');
+  const [attendance, setAttendance] = useState([
     { id: 'STU001', name: 'Chinedu Eze', class: 'SS3 A', status: 'Present', time: '07:45 AM' },
     { id: 'STU002', name: 'Fatima Ibrahim', class: 'SS3 A', status: 'Late', time: '08:15 AM' },
     { id: 'STU003', name: 'Oluwaseun Ade', class: 'SS3 A', status: 'Absent', time: '-' },
     { id: 'STU004', name: 'Ngozi Okoro', class: 'SS3 A', status: 'Present', time: '07:50 AM' },
     { id: 'STU005', name: 'Kelechi Nwosu', class: 'SS3 A', status: 'Present', time: '07:30 AM' },
-  ];
+  ]);
+
+  const toggleStatus = (id) => {
+    setAttendance(attendance.map(item => {
+      if (item.id === id) {
+        const statuses = ['Present', 'Late', 'Absent'];
+        const currentIndex = statuses.indexOf(item.status);
+        const nextStatus = statuses[(currentIndex + 1) % statuses.length];
+        return { 
+          ...item, 
+          status: nextStatus, 
+          time: nextStatus === 'Absent' ? '-' : (item.time === '-' ? '08:00 AM' : item.time) 
+        };
+      }
+      return item;
+    }));
+  };
 
   const generatePDF = () => {
     const doc = new jsPDF();
     doc.text(`Attendance Report - ${selectedDate}`, 14, 15);
-    const tableData = attendanceData.map(a => [a.name, a.class, a.time, a.status]);
-    doc.autoTable({
+    const tableData = attendance.map(a => [a.name, a.class, a.time, a.status]);
+    autoTable(doc, {
       head: [['Student Name', 'Class', 'Check-in Time', 'Status']],
       body: tableData,
       startY: 20,
     });
     doc.save(`attendance_${selectedDate}.pdf`);
+  };
+
+  const filteredAttendance = attendance.filter(item => 
+    item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.class.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const stats = {
+    present: attendance.filter(a => a.status === 'Present').length,
+    late: attendance.filter(a => a.status === 'Late').length,
+    absent: attendance.filter(a => a.status === 'Absent').length,
   };
 
   return (
@@ -60,17 +87,14 @@ const Attendance = () => {
               outline: 'none'
             }}
           />
-          <button className="btn-primary">
-            <Calendar size={18} /> Mark Attendance
-          </button>
         </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
         {[
-          { label: 'Present Today', value: '1,152', icon: <CheckCircle color="var(--success)" />, color: 'var(--success)' },
-          { label: 'Late Arrival', value: '42', icon: <Clock color="var(--warning)" />, color: 'var(--warning)' },
-          { label: 'Absent', value: '18', icon: <XCircle color="var(--error)" />, color: 'var(--error)' },
+          { label: 'Present Today', value: stats.present, icon: <CheckCircle color="var(--success)" />, color: 'var(--success)' },
+          { label: 'Late Arrival', value: stats.late, icon: <Clock color="var(--warning)" />, color: 'var(--warning)' },
+          { label: 'Absent', value: stats.absent, icon: <XCircle color="var(--error)" />, color: 'var(--error)' },
           { label: 'Avg. Attendance', value: '96%', icon: <Calendar color="var(--primary-color)" />, color: 'var(--primary-color)' },
         ].map((stat, i) => (
           <div key={i} className="glass-card" style={{ padding: '1.25rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -94,6 +118,8 @@ const Attendance = () => {
               <input 
                 type="text" 
                 placeholder="Search students..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
                 style={{
                   width: '100%',
                   padding: '0.5rem 0.75rem 0.5rem 2.2rem',
@@ -106,19 +132,6 @@ const Attendance = () => {
                 }}
               />
             </div>
-            <button style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: '0.5rem', 
-              padding: '0.5rem 1rem', 
-              background: 'var(--glass-bg)', 
-              border: '1px solid var(--glass-border)',
-              borderRadius: 'var(--radius-md)',
-              color: 'white',
-              fontSize: '0.85rem'
-            }}>
-              <Filter size={16} /> Class
-            </button>
           </div>
         </div>
 
@@ -133,7 +146,7 @@ const Attendance = () => {
             </tr>
           </thead>
           <tbody>
-            {attendanceData.map((row) => (
+            {filteredAttendance.map((row) => (
               <tr key={row.id} style={{ borderBottom: '1px solid var(--glass-border)' }}>
                 <td style={{ padding: '1rem', fontWeight: '500' }}>{row.name}</td>
                 <td style={{ padding: '1rem' }}>{row.class}</td>
@@ -150,7 +163,12 @@ const Attendance = () => {
                   </span>
                 </td>
                 <td style={{ padding: '1rem', textAlign: 'right' }}>
-                  <button style={{ background: 'transparent', border: 'none', color: 'var(--primary-color)', cursor: 'pointer', fontSize: '0.85rem' }}>Update</button>
+                  <button 
+                    onClick={() => toggleStatus(row.id)}
+                    style={{ background: 'transparent', border: 'none', color: 'var(--primary-color)', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600' }}
+                  >
+                    Toggle Status
+                  </button>
                 </td>
               </tr>
             ))}
