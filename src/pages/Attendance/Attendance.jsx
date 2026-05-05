@@ -47,18 +47,24 @@ const Attendance = () => {
   const generatePDF = () => {
     const doc = new jsPDF();
     doc.text(`Attendance Report - ${selectedDate}`, 14, 15);
-    const tableData = attendance.map(a => [a.name, a.class, a.clockIn, a.clockOut, a.status]);
+    doc.setFontSize(10);
+    doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 22);
+    
+    const tableData = filteredAttendance.map(a => [a.name, a.class, a.clockIn, a.clockOut, a.status]);
     autoTable(doc, {
       head: [['Student Name', 'Class', 'Clock In', 'Clock Out', 'Status']],
       body: tableData,
-      startY: 20,
+      startY: 30,
+      theme: 'grid',
+      headStyles: { fillStyle: '#6366f1' }
     });
     doc.save(`attendance_${selectedDate}.pdf`);
   };
 
   const filteredAttendance = attendance.filter(item => 
     item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.class.toLowerCase().includes(searchTerm.toLowerCase())
+    item.class.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.status.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const stats = {
@@ -75,32 +81,39 @@ const Attendance = () => {
           <p style={{ color: 'var(--text-muted)' }}>Monitor daily attendance for students and staff with real-time logs.</p>
         </div>
         <div style={{ display: 'flex', gap: '1rem' }}>
+          <div style={{ position: 'relative', width: '300px' }}>
+            <Search style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} size={16} />
+            <input 
+              type="text" 
+              placeholder="Search by name, class or status..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '0.75rem 0.75rem 0.75rem 2.2rem',
+                background: 'var(--glass-bg)',
+                border: '1px solid var(--glass-border)',
+                borderRadius: 'var(--radius-md)',
+                color: 'white',
+                outline: 'none',
+                fontSize: '0.9rem'
+              }}
+            />
+          </div>
           <button onClick={generatePDF} style={{ 
             display: 'flex', 
             alignItems: 'center', 
             gap: '0.5rem', 
             padding: '0.75rem 1.25rem', 
-            background: 'var(--glass-bg)', 
-            border: '1px solid var(--glass-border)',
+            background: 'var(--primary-color)', 
+            border: 'none',
             borderRadius: 'var(--radius-md)',
             color: 'white',
+            fontWeight: '600',
             cursor: 'pointer'
           }}>
-            <Download size={18} /> Export Log
+            <Download size={18} /> Export Filtered PDF
           </button>
-          <input 
-            type="date" 
-            value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
-            style={{
-              padding: '0.6rem 1rem',
-              background: 'var(--glass-bg)',
-              border: '1px solid var(--glass-border)',
-              borderRadius: 'var(--radius-md)',
-              color: 'white',
-              outline: 'none'
-            }}
-          />
         </div>
       </div>
 
@@ -125,28 +138,24 @@ const Attendance = () => {
 
       <div className="glass-card" style={{ padding: '1.5rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-          <h3 style={{ fontSize: '1.25rem' }}>Daily Attendance Log (SS3 A)</h3>
-          <div style={{ display: 'flex', gap: '1rem' }}>
-            <div style={{ position: 'relative', width: '250px' }}>
-              <Search style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} size={16} />
-              <input 
-                type="text" 
-                placeholder="Search students..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '0.5rem 0.75rem 0.5rem 2.2rem',
-                  background: 'var(--glass-bg)',
-                  border: '1px solid var(--glass-border)',
-                  borderRadius: 'var(--radius-md)',
-                  color: 'white',
-                  outline: 'none',
-                  fontSize: '0.85rem'
-                }}
-              />
-            </div>
+          <div>
+            <h3 style={{ fontSize: '1.25rem' }}>Daily Attendance Log (SS3 A)</h3>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Records for {new Date(selectedDate).toDateString()}</p>
           </div>
+          <input 
+            type="date" 
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            style={{
+              padding: '0.6rem 1rem',
+              background: 'var(--glass-bg)',
+              border: '1px solid var(--glass-border)',
+              borderRadius: 'var(--radius-md)',
+              color: 'white',
+              outline: 'none',
+              fontSize: '0.9rem'
+            }}
+          />
         </div>
 
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
