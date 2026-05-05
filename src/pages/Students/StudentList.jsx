@@ -1,18 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { UserPlus, Search, Filter, MoreHorizontal, Mail, Phone, MapPin, Download, Trash2, X } from 'lucide-react';
+import { UserPlus, Search, Filter, Edit2, Mail, Phone, MapPin, Download, Trash2, X } from 'lucide-react';
 import { motion } from 'framer-motion';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
-import { collection, getDocs, addDoc, deleteDoc, doc } from 'firebase/firestore';
+import autoTable from 'jspdf-autotable';
+import { collection, getDocs, addDoc, deleteDoc, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
 
 const StudentList = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [newStudent, setNewStudent] = useState({
-    name: '', class: '', gender: 'Male', parent: '', phone: ''
+  const [showModal, setShowModal] = useState(false);
+  const [editingStudent, setEditingStudent] = useState(null);
+  const [formData, setFormData] = useState({
+    name: '', class: '', gender: 'Male', parent: '', phone: '', status: 'Active'
   });
 
   const fetchStudents = async () => {
@@ -35,28 +36,51 @@ const StudentList = () => {
     fetchStudents();
   }, []);
 
-  const handleAddStudent = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const docRef = await addDoc(collection(db, "students"), {
-        ...newStudent,
-        status: 'Active',
-        createdAt: new Date().toISOString(),
-        studentId: `STU${Math.floor(1000 + Math.random() * 9000)}` // Generate random ID
-      });
-      setShowAddModal(false);
-      setNewStudent({ name: '', class: '', gender: 'Male', parent: '', phone: '' });
-      fetchStudents(); // Refresh list
+      if (editingStudent) {
+        // Update existing student
+        await updateDoc(doc(db, "students", editingStudent.id), formData);
+      } else {
+        // Add new student
+        await addDoc(collection(db, "students"), {
+          ...formData,
+          createdAt: new Date().toISOString(),
+          studentId: `STU${Math.floor(1000 + Math.random() * 9000)}`
+        });
+      }
+      closeModal();
+      fetchStudents();
     } catch (error) {
-      console.error("Error adding student: ", error);
+      console.error("Error saving student: ", error);
     }
+  };
+
+  const handleEdit = (student) => {
+    setEditingStudent(student);
+    setFormData({
+      name: student.name,
+      class: student.class,
+      gender: student.gender,
+      parent: student.parent,
+      phone: student.phone,
+      status: student.status
+    });
+    setShowModal(true);
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+    setEditingStudent(null);
+    setFormData({ name: '', class: '', gender: 'Male', parent: '', phone: '', status: 'Active' });
   };
 
   const handleDelete = async (id) => {
     if(window.confirm("Are you sure you want to delete this student?")) {
       try {
         await deleteDoc(doc(db, "students", id));
-        fetchStudents(); // Refresh list
+        fetchStudents();
       } catch (error) {
         console.error("Error deleting student: ", error);
       }
@@ -67,10 +91,12 @@ const StudentList = () => {
     const doc = new jsPDF();
     doc.text('Student Registry Report', 14, 15);
     const tableData = students.map(s => [s.studentId, s.name, s.class, s.gender, s.parent, s.status]);
-    doc.autoTable({
+    autoTable(doc, {
       head: [['ID', 'Name', 'Class', 'Gender', 'Parent', 'Status']],
       body: tableData,
       startY: 20,
+      theme: 'grid',
+      headStyles: { fillStyle: '#6366f1' }
     });
     doc.save('student_registry.pdf');
   };
@@ -102,7 +128,7 @@ const StudentList = () => {
           }}>
             <Download size={18} /> Export List
           </button>
-          <button className="btn-primary" onClick={() => setShowAddModal(true)}>
+          <button className="btn-primary" onClick={() => setShowModal(true)}>
             <UserPlus size={20} /> Admit Student
           </button>
         </div>
@@ -143,7 +169,7 @@ const StudentList = () => {
                   <th style={{ padding: '1rem' }}>Gender</th>
                   <th style={{ padding: '1rem' }}>Parent/Guardian</th>
                   <th style={{ padding: '1rem' }}>Status</th>
-                  <th style={{ padding: '1rem', textAlign: 'right' }}>Action</th>
+                  <th style={{ padding: '1rem', textAlign: 'right' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -156,7 +182,7 @@ const StudentList = () => {
                     <td style={{ padding: '1rem', fontSize: '0.85rem', color: 'var(--primary-color)', fontWeight: '600' }}>{stu.studentId}</td>
                     <td style={{ padding: '1rem' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                        <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--glass-bg)', display: 'flex', alignItems: 'center', justifyItems: 'center', justifyContent: 'center' }}>
+                        <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--glass-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                           {stu.name ? stu.name.charAt(0) : '?'}
                         </div>
                         <span style={{ fontWeight: '500' }}>{stu.name}</span>
@@ -182,7 +208,10 @@ const StudentList = () => {
                       </span>
                     </td>
                     <td style={{ padding: '1rem', textAlign: 'right' }}>
-                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
+                        <button onClick={() => handleEdit(stu)} style={{ background: 'transparent', border: 'none', color: 'var(--primary-color)', cursor: 'pointer' }}>
+                          <Edit2 size={18} />
+                        </button>
                         <button onClick={() => handleDelete(stu.id)} style={{ background: 'transparent', border: 'none', color: 'var(--error)', cursor: 'pointer' }}>
                           <Trash2 size={18} />
                         </button>
@@ -196,42 +225,52 @@ const StudentList = () => {
         </div>
       </div>
 
-      {showAddModal && (
+      {showModal && (
         <div style={{
           position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
           background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
           display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
         }}>
           <div className="glass-card" style={{ width: '100%', maxWidth: '500px', padding: '2rem', position: 'relative' }}>
-            <button onClick={() => setShowAddModal(false)} style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'transparent', border: 'none', color: 'white', cursor: 'pointer' }}>
+            <button onClick={closeModal} style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'transparent', border: 'none', color: 'white', cursor: 'pointer' }}>
               <X size={24} />
             </button>
-            <h2 style={{ marginBottom: '1.5rem' }}>Admit New Student</h2>
-            <form onSubmit={handleAddStudent} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <h2 style={{ marginBottom: '1.5rem' }}>{editingStudent ? 'Edit Student Profile' : 'Admit New Student'}</h2>
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Full Name</label>
-                <input required type="text" value={newStudent.name} onChange={e => setNewStudent({...newStudent, name: e.target.value})} style={{ width: '100%', padding: '0.75rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'white' }} />
+                <input required type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} style={{ width: '100%', padding: '0.75rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'white' }} />
               </div>
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Class</label>
-                <input required type="text" placeholder="e.g. SS3 A" value={newStudent.class} onChange={e => setNewStudent({...newStudent, class: e.target.value})} style={{ width: '100%', padding: '0.75rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'white' }} />
+                <input required type="text" value={formData.class} onChange={e => setFormData({...formData, class: e.target.value})} style={{ width: '100%', padding: '0.75rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'white' }} />
               </div>
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Gender</label>
-                <select value={newStudent.gender} onChange={e => setNewStudent({...newStudent, gender: e.target.value})} style={{ width: '100%', padding: '0.75rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'white' }}>
+                <select value={formData.gender} onChange={e => setFormData({...formData, gender: e.target.value})} style={{ width: '100%', padding: '0.75rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'white' }}>
                   <option value="Male">Male</option>
                   <option value="Female">Female</option>
                 </select>
               </div>
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Parent/Guardian Name</label>
-                <input required type="text" value={newStudent.parent} onChange={e => setNewStudent({...newStudent, parent: e.target.value})} style={{ width: '100%', padding: '0.75rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'white' }} />
+                <input required type="text" value={formData.parent} onChange={e => setFormData({...formData, parent: e.target.value})} style={{ width: '100%', padding: '0.75rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'white' }} />
               </div>
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Parent/Guardian Phone</label>
-                <input required type="text" value={newStudent.phone} onChange={e => setNewStudent({...newStudent, phone: e.target.value})} style={{ width: '100%', padding: '0.75rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'white' }} />
+                <input required type="text" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} style={{ width: '100%', padding: '0.75rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'white' }} />
               </div>
-              <button type="submit" className="btn-primary" style={{ marginTop: '1rem', justifyContent: 'center' }}>Save Student</button>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Status</label>
+                <select value={formData.status} onChange={e => setFormData({...formData, status: e.target.value})} style={{ width: '100%', padding: '0.75rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'white' }}>
+                  <option value="Active">Active</option>
+                  <option value="Inactive">Inactive</option>
+                  <option value="Suspended">Suspended</option>
+                </select>
+              </div>
+              <button type="submit" className="btn-primary" style={{ marginTop: '1rem', justifyContent: 'center' }}>
+                {editingStudent ? 'Update Profile' : 'Save Admission'}
+              </button>
             </form>
           </div>
         </div>
