@@ -58,18 +58,18 @@ const App = () => {
           <Route path="/gradebook" element={<ProtectedRoute allowedRoles={['admin', 'teacher']}><MainLayout><GradeBook /></MainLayout></ProtectedRoute>} />
 
           {/* Finance & Payroll Modules */}
-          <Route path="/finance" element={<ProtectedRoute><MainLayout><Fees /></MainLayout></ProtectedRoute>} />
-          <Route path="/payroll" element={<ProtectedRoute><MainLayout><Payroll /></MainLayout></ProtectedRoute>} />
+          <Route path="/finance" element={<ProtectedRoute allowedRoles={['admin', 'parent']}><MainLayout><Fees /></MainLayout></ProtectedRoute>} />
+          <Route path="/payroll" element={<ProtectedRoute allowedRoles={['admin']}><MainLayout><Payroll /></MainLayout></ProtectedRoute>} />
 
           {/* Students & Staff Modules */}
-          <Route path="/students" element={<ProtectedRoute><MainLayout><StudentList /></MainLayout></ProtectedRoute>} />
-          <Route path="/staff" element={<ProtectedRoute><MainLayout><StaffList /></MainLayout></ProtectedRoute>} />
+          <Route path="/students" element={<ProtectedRoute allowedRoles={['admin', 'teacher']}><MainLayout><StudentList /></MainLayout></ProtectedRoute>} />
+          <Route path="/staff" element={<ProtectedRoute allowedRoles={['admin']}><MainLayout><StaffList /></MainLayout></ProtectedRoute>} />
 
           {/* Attendance, Reports, Inventory & Settings Modules */}
-          <Route path="/attendance" element={<ProtectedRoute><MainLayout><Attendance /></MainLayout></ProtectedRoute>} />
-          <Route path="/reports" element={<ProtectedRoute><MainLayout><Reports /></MainLayout></ProtectedRoute>} />
-          <Route path="/inventory" element={<ProtectedRoute><MainLayout><Inventory /></MainLayout></ProtectedRoute>} />
-          <Route path="/settings" element={<ProtectedRoute><MainLayout><Settings /></MainLayout></ProtectedRoute>} />
+          <Route path="/attendance" element={<ProtectedRoute allowedRoles={['admin', 'teacher', 'student', 'parent']}><MainLayout><Attendance /></MainLayout></ProtectedRoute>} />
+          <Route path="/reports" element={<ProtectedRoute allowedRoles={['admin']}><MainLayout><Reports /></MainLayout></ProtectedRoute>} />
+          <Route path="/inventory" element={<ProtectedRoute allowedRoles={['admin']}><MainLayout><Inventory /></MainLayout></ProtectedRoute>} />
+          <Route path="/settings" element={<ProtectedRoute allowedRoles={['admin']}><MainLayout><Settings /></MainLayout></ProtectedRoute>} />
 
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="*" element={<div>404 - Not Found</div>} />

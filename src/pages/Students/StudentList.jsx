@@ -5,8 +5,10 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { collection, getDocs, addDoc, deleteDoc, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
+import { useAuth } from '../../context/AuthContext';
 
 const StudentList = () => {
+  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -40,10 +42,8 @@ const StudentList = () => {
     e.preventDefault();
     try {
       if (editingStudent) {
-        // Update existing student
         await updateDoc(doc(db, "students", editingStudent.id), formData);
       } else {
-        // Add new student
         await addDoc(collection(db, "students"), {
           ...formData,
           createdAt: new Date().toISOString(),
@@ -90,7 +90,7 @@ const StudentList = () => {
   const generatePDF = () => {
     const doc = new jsPDF();
     doc.text('Student Registry Report', 14, 15);
-    const tableData = students.map(s => [s.studentId, s.name, s.class, s.gender, s.parent, s.status]);
+    const tableData = filteredStudents.map(s => [s.studentId, s.name, s.class, s.gender, s.parent, s.status]);
     autoTable(doc, {
       head: [['ID', 'Name', 'Class', 'Gender', 'Parent', 'Status']],
       body: tableData,
@@ -101,18 +101,27 @@ const StudentList = () => {
     doc.save('student_registry.pdf');
   };
 
-  const filteredStudents = students.filter(s => 
-    s.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    (s.studentId && s.studentId.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    s.class.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredStudents = students.filter(s => {
+    const matchesSearch = s.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                         (s.studentId && s.studentId.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                         s.class.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    // Role-based filtering: Teachers only see their assigned class
+    if (user?.role === 'teacher' && user?.assignedClass) {
+      return matchesSearch && s.class === user.assignedClass;
+    }
+    
+    return matchesSearch;
+  });
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>Student <span className="text-gradient">Registry</span></h1>
-          <p style={{ color: 'var(--text-muted)' }}>Manage student profiles, admissions, and academic history.</p>
+          <p style={{ color: 'var(--text-muted)' }}>
+            {user?.role === 'teacher' ? `Managing records for ${user.assignedClass}` : 'Manage student profiles, admissions, and academic history.'}
+          </p>
         </div>
         <div style={{ display: 'flex', gap: '1rem' }}>
           <button onClick={generatePDF} style={{ 
@@ -212,9 +221,11 @@ const StudentList = () => {
                         <button onClick={() => handleEdit(stu)} style={{ background: 'transparent', border: 'none', color: 'var(--primary-color)', cursor: 'pointer' }}>
                           <Edit2 size={18} />
                         </button>
-                        <button onClick={() => handleDelete(stu.id)} style={{ background: 'transparent', border: 'none', color: 'var(--error)', cursor: 'pointer' }}>
-                          <Trash2 size={18} />
-                        </button>
+                        {user?.role === 'admin' && (
+                          <button onClick={() => handleDelete(stu.id)} style={{ background: 'transparent', border: 'none', color: 'var(--error)', cursor: 'pointer' }}>
+                            <Trash2 size={18} />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

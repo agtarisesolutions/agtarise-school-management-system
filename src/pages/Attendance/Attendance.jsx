@@ -1,17 +1,32 @@
-import React, { useState } from 'react';
-import { Calendar, Search, CheckCircle, XCircle, Clock, Filter, Download, X } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Calendar, Search, CheckCircle, XCircle, Clock, Filter, Download, X, Layers } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { useAuth } from '../../context/AuthContext';
 
 const Attendance = () => {
+  const { user } = useAuth();
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedClass, setSelectedClass] = useState('SS3 A');
+  
+  // Available classes (for Admin/Management selection)
+  const availableClasses = ['JSS 1 A', 'JSS 2 B', 'SS1 C', 'SS2 A', 'SS3 A'];
+
+  useEffect(() => {
+    // If user is a teacher, automatically restrict to their assigned class
+    if (user?.role === 'teacher' && user?.assignedClass) {
+      setSelectedClass(user.assignedClass);
+    }
+  }, [user]);
+
   const [attendance, setAttendance] = useState([
     { id: 'STU001', name: 'Chinedu Eze', class: 'SS3 A', status: 'Present', clockIn: '07:45 AM', clockOut: '-' },
     { id: 'STU002', name: 'Fatima Ibrahim', class: 'SS3 A', status: 'Late', clockIn: '08:15 AM', clockOut: '-' },
     { id: 'STU003', name: 'Oluwaseun Ade', class: 'SS3 A', status: 'Absent', clockIn: '-', clockOut: '-' },
     { id: 'STU004', name: 'Ngozi Okoro', class: 'SS3 A', status: 'Present', clockIn: '07:50 AM', clockOut: '-' },
     { id: 'STU005', name: 'Kelechi Nwosu', class: 'SS3 A', status: 'Present', clockIn: '07:30 AM', clockOut: '-' },
+    { id: 'STU006', name: 'Adebayo Samuel', class: 'JSS 1 A', status: 'Present', clockIn: '07:40 AM', clockOut: '-' },
   ]);
 
   const handleClockAction = (id, type) => {
@@ -61,16 +76,17 @@ const Attendance = () => {
     doc.save(`attendance_${selectedDate}.pdf`);
   };
 
-  const filteredAttendance = attendance.filter(item => 
-    item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.class.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.status.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredAttendance = attendance.filter(item => {
+    const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         item.status.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesClass = item.class === selectedClass;
+    return matchesSearch && matchesClass;
+  });
 
   const stats = {
-    present: attendance.filter(a => a.status === 'Present').length,
-    late: attendance.filter(a => a.status === 'Late').length,
-    absent: attendance.filter(a => a.status === 'Absent').length,
+    present: filteredAttendance.filter(a => a.status === 'Present').length,
+    late: filteredAttendance.filter(a => a.status === 'Late').length,
+    absent: filteredAttendance.filter(a => a.status === 'Absent').length,
   };
 
   return (
@@ -137,25 +153,52 @@ const Attendance = () => {
       </div>
 
       <div className="glass-card" style={{ padding: '1.5rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
-            <h3 style={{ fontSize: '1.25rem' }}>Daily Attendance Log (SS3 A)</h3>
+            <h3 style={{ fontSize: '1.25rem' }}>Daily Attendance Log ({selectedClass})</h3>
             <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Records for {new Date(selectedDate).toDateString()}</p>
           </div>
-          <input 
-            type="date" 
-            value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
-            style={{
-              padding: '0.6rem 1rem',
-              background: 'var(--glass-bg)',
-              border: '1px solid var(--glass-border)',
-              borderRadius: 'var(--radius-md)',
-              color: 'white',
-              outline: 'none',
-              fontSize: '0.9rem'
-            }}
-          />
+          
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+            {/* Class Selection Dropdown (Only for Admins/Managers) */}
+            {user?.role !== 'teacher' && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Layers size={16} color="var(--text-muted)" />
+                <select 
+                  value={selectedClass}
+                  onChange={(e) => setSelectedClass(e.target.value)}
+                  style={{
+                    padding: '0.6rem 1rem',
+                    background: 'var(--glass-bg)',
+                    border: '1px solid var(--glass-border)',
+                    borderRadius: 'var(--radius-md)',
+                    color: 'white',
+                    outline: 'none',
+                    fontSize: '0.9rem'
+                  }}
+                >
+                  {availableClasses.map(cls => (
+                    <option key={cls} value={cls}>{cls}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+            
+            <input 
+              type="date" 
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              style={{
+                padding: '0.6rem 1rem',
+                background: 'var(--glass-bg)',
+                border: '1px solid var(--glass-border)',
+                borderRadius: 'var(--radius-md)',
+                color: 'white',
+                outline: 'none',
+                fontSize: '0.9rem'
+              }}
+            />
+          </div>
         </div>
 
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
