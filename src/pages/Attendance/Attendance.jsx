@@ -7,12 +7,26 @@ const Attendance = () => {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [searchTerm, setSearchTerm] = useState('');
   const [attendance, setAttendance] = useState([
-    { id: 'STU001', name: 'Chinedu Eze', class: 'SS3 A', status: 'Present', time: '07:45 AM' },
-    { id: 'STU002', name: 'Fatima Ibrahim', class: 'SS3 A', status: 'Late', time: '08:15 AM' },
-    { id: 'STU003', name: 'Oluwaseun Ade', class: 'SS3 A', status: 'Absent', time: '-' },
-    { id: 'STU004', name: 'Ngozi Okoro', class: 'SS3 A', status: 'Present', time: '07:50 AM' },
-    { id: 'STU005', name: 'Kelechi Nwosu', class: 'SS3 A', status: 'Present', time: '07:30 AM' },
+    { id: 'STU001', name: 'Chinedu Eze', class: 'SS3 A', status: 'Present', clockIn: '07:45 AM', clockOut: '-' },
+    { id: 'STU002', name: 'Fatima Ibrahim', class: 'SS3 A', status: 'Late', clockIn: '08:15 AM', clockOut: '-' },
+    { id: 'STU003', name: 'Oluwaseun Ade', class: 'SS3 A', status: 'Absent', clockIn: '-', clockOut: '-' },
+    { id: 'STU004', name: 'Ngozi Okoro', class: 'SS3 A', status: 'Present', clockIn: '07:50 AM', clockOut: '-' },
+    { id: 'STU005', name: 'Kelechi Nwosu', class: 'SS3 A', status: 'Present', clockIn: '07:30 AM', clockOut: '-' },
   ]);
+
+  const handleClockAction = (id, type) => {
+    const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    setAttendance(attendance.map(item => {
+      if (item.id === id) {
+        if (type === 'in') {
+          return { ...item, status: 'Present', clockIn: now, clockOut: '-' };
+        } else if (type === 'out') {
+          return { ...item, clockOut: now };
+        }
+      }
+      return item;
+    }));
+  };
 
   const toggleStatus = (id) => {
     setAttendance(attendance.map(item => {
@@ -23,7 +37,7 @@ const Attendance = () => {
         return { 
           ...item, 
           status: nextStatus, 
-          time: nextStatus === 'Absent' ? '-' : (item.time === '-' ? '08:00 AM' : item.time) 
+          clockIn: nextStatus === 'Absent' ? '-' : (item.clockIn === '-' ? '08:00 AM' : item.clockIn) 
         };
       }
       return item;
@@ -33,9 +47,9 @@ const Attendance = () => {
   const generatePDF = () => {
     const doc = new jsPDF();
     doc.text(`Attendance Report - ${selectedDate}`, 14, 15);
-    const tableData = attendance.map(a => [a.name, a.class, a.time, a.status]);
+    const tableData = attendance.map(a => [a.name, a.class, a.clockIn, a.clockOut, a.status]);
     autoTable(doc, {
-      head: [['Student Name', 'Class', 'Check-in Time', 'Status']],
+      head: [['Student Name', 'Class', 'Clock In', 'Clock Out', 'Status']],
       body: tableData,
       startY: 20,
     });
@@ -140,7 +154,8 @@ const Attendance = () => {
             <tr style={{ textAlign: 'left', color: 'var(--text-muted)', borderBottom: '1px solid var(--glass-border)' }}>
               <th style={{ padding: '1rem' }}>Student Name</th>
               <th style={{ padding: '1rem' }}>Class</th>
-              <th style={{ padding: '1rem' }}>Check-in Time</th>
+              <th style={{ padding: '1rem' }}>Clock In</th>
+              <th style={{ padding: '1rem' }}>Clock Out</th>
               <th style={{ padding: '1rem' }}>Status</th>
               <th style={{ padding: '1rem', textAlign: 'right' }}>Actions</th>
             </tr>
@@ -150,7 +165,8 @@ const Attendance = () => {
               <tr key={row.id} style={{ borderBottom: '1px solid var(--glass-border)' }}>
                 <td style={{ padding: '1rem', fontWeight: '500' }}>{row.name}</td>
                 <td style={{ padding: '1rem' }}>{row.class}</td>
-                <td style={{ padding: '1rem' }}>{row.time}</td>
+                <td style={{ padding: '1rem' }}>{row.clockIn}</td>
+                <td style={{ padding: '1rem' }}>{row.clockOut}</td>
                 <td style={{ padding: '1rem' }}>
                   <span style={{ 
                     padding: '0.25rem 0.75rem', 
@@ -163,12 +179,31 @@ const Attendance = () => {
                   </span>
                 </td>
                 <td style={{ padding: '1rem', textAlign: 'right' }}>
-                  <button 
-                    onClick={() => toggleStatus(row.id)}
-                    style={{ background: 'transparent', border: 'none', color: 'var(--primary-color)', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600' }}
-                  >
-                    Toggle Status
-                  </button>
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
+                    {row.clockIn === '-' ? (
+                      <button 
+                        onClick={() => handleClockAction(row.id, 'in')}
+                        style={{ padding: '0.4rem 0.8rem', background: 'var(--success)', border: 'none', borderRadius: '4px', color: 'white', fontSize: '0.75rem', cursor: 'pointer' }}
+                      >
+                        Clock In
+                      </button>
+                    ) : row.clockOut === '-' ? (
+                      <button 
+                        onClick={() => handleClockAction(row.id, 'out')}
+                        style={{ padding: '0.4rem 0.8rem', background: 'var(--primary-color)', border: 'none', borderRadius: '4px', color: 'white', fontSize: '0.75rem', cursor: 'pointer' }}
+                      >
+                        Clock Out
+                      </button>
+                    ) : (
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Completed</span>
+                    )}
+                    <button 
+                      onClick={() => toggleStatus(row.id)}
+                      style={{ background: 'transparent', border: '1px solid var(--glass-border)', padding: '0.4rem 0.6rem', borderRadius: '4px', color: 'white', fontSize: '0.75rem', cursor: 'pointer' }}
+                    >
+                      Status
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}

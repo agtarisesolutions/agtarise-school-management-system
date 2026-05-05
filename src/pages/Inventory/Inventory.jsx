@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Package, Plus, Search, Filter, AlertTriangle, CheckCircle, Download, User, X } from 'lucide-react';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 const Inventory = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -44,7 +44,7 @@ const Inventory = () => {
       item.price,
       item.staff
     ]);
-    doc.autoTable({
+    autoTable(doc, {
       head: [['Item Name', 'Category', 'Initial Qty', 'Sold', 'Remaining', 'Price', 'Staff In-Charge']],
       body: tableData,
       startY: 20,
