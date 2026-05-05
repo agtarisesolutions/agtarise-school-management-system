@@ -23,7 +23,14 @@ const Payroll = () => {
   const generatePDF = () => {
     const doc = new jsPDF();
     doc.text('Staff Payroll Report - April 2026', 14, 15);
-    const tableData = payrollData.map(p => [p.name, p.baseSalary, p.allowances, p.tax, p.netPay, p.status]);
+    const tableData = payrollData.map(p => [
+      p.name, 
+      p.baseSalary.replace('₦', 'N'), 
+      p.allowances.replace('₦', 'N'), 
+      p.tax.replace('₦', 'N'), 
+      p.netPay.replace('₦', 'N'), 
+      p.status
+    ]);
     autoTable(doc, {
       head: [['Staff Name', 'Base Salary', 'Allowances', 'Tax/Deductions', 'Net Pay', 'Status']],
       body: tableData,

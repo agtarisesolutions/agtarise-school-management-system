@@ -210,7 +210,7 @@ const Dashboard = () => {
       const tableData = [
         ['Total Students', '1,284'],
         ['Total Teachers', '86'],
-        ['Fees Collected', '₦4.2M'],
+        ['Fees Collected', 'N4.2M'],
         ['Academic Performance', '84%'],
       ];
 

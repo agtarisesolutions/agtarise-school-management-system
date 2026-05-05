@@ -41,7 +41,7 @@ const Inventory = () => {
       item.quantity, 
       item.sold, 
       item.quantity - item.sold, 
-      item.price,
+      item.price.replace('₦', 'N'),
       item.staff
     ]);
     autoTable(doc, {

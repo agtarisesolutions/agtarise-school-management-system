@@ -33,7 +33,7 @@ const Fees = () => {
       body: [
         ['Student Name', tx.student],
         ['Payment Type', tx.type],
-        ['Amount Paid', tx.amount],
+        ['Amount Paid', tx.amount.replace('₦', 'N')],
         ['Payment Date', tx.date],
         ['Status', tx.status],
       ],
