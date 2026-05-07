@@ -238,7 +238,7 @@ const GradeBook = () => {
         ) : !selectedClass ? (
           <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>Please select a class to view students.</div>
         ) : !selectedSubject ? (
-          <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--warning)' }}>No subjects found. Please go to Academics > Subjects to create subjects.</div>
+          <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--warning)' }}>No subjects found. Please go to Academics &gt; Subjects to create subjects.</div>
         ) : students.length === 0 ? (
           <div style={{ padding: '2rem', textAlign: 'center' }}>No students found in {selectedClass}.</div>
         ) : (
