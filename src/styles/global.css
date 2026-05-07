@@ -86,3 +86,10 @@ h1, h2, h3, h4, h5, h6 {
 .btn-primary:active {
   transform: scale(0.98);
 }
+
+/* Form Dropdowns Global Styling */
+select option {
+  background-color: #1e293b; /* Solid dark gray (Slate 800) for options */
+  color: var(--text-main);
+  padding: 0.5rem;
+}
