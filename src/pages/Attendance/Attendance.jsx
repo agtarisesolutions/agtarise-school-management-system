@@ -43,13 +43,15 @@ const Attendance = () => {
     fetchMetadata();
   }, [user]);
 
-  // Fetch students based on class or global search
+  // Fetch students based on class, global search, or parent/student role
   useEffect(() => {
     const fetchStudents = async () => {
       setLoading(true);
       try {
         let q;
-        if (isGlobalSearch && user?.role === 'admin') {
+        if ((user?.role === 'parent' || user?.role === 'student') && user?.linkedStudentId) {
+          q = query(collection(db, "students"), where("studentId", "==", user.linkedStudentId));
+        } else if (isGlobalSearch && user?.role === 'admin') {
           q = collection(db, "students");
         } else {
           q = query(collection(db, "students"), where("class", "==", selectedClass));
@@ -60,6 +62,12 @@ const Attendance = () => {
           id: doc.id,
           ...doc.data()
         }));
+        
+        // If parent/student, make sure selectedClass matches the student's class to fetch the correct logs
+        if ((user?.role === 'parent' || user?.role === 'student') && studentsData.length > 0 && studentsData[0].class !== selectedClass) {
+          setSelectedClass(studentsData[0].class);
+        }
+        
         setStudents(studentsData);
       } catch (error) {
         console.error("Error fetching students: ", error);
@@ -252,7 +260,7 @@ const Attendance = () => {
                   <th style={{ padding: '1rem' }}>Clock In</th>
                   <th style={{ padding: '1rem' }}>Clock Out</th>
                   <th style={{ padding: '1rem' }}>Status</th>
-                  <th style={{ padding: '1rem', textAlign: 'right' }}>Actions</th>
+                  {user?.role !== 'parent' && user?.role !== 'student' && <th style={{ padding: '1rem', textAlign: 'right' }}>Actions</th>}
                 </tr>
               </thead>
               <tbody>
@@ -278,22 +286,24 @@ const Attendance = () => {
                           {log.status}
                         </span>
                       </td>
-                      <td style={{ padding: '1rem', textAlign: 'right' }}>
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
-                          <button 
-                            onClick={() => handleClockAction(stu.id, 'in')}
-                            style={{ padding: '0.4rem 0.8rem', background: 'var(--success)', border: 'none', borderRadius: '4px', color: 'white', fontSize: '0.75rem', cursor: 'pointer' }}
-                          >In</button>
-                          <button 
-                            onClick={() => handleClockAction(stu.id, 'out')}
-                            style={{ padding: '0.4rem 0.8rem', background: 'var(--primary-color)', border: 'none', borderRadius: '4px', color: 'white', fontSize: '0.75rem', cursor: 'pointer' }}
-                          >Out</button>
-                          <button 
-                            onClick={() => toggleStatus(stu.id)}
-                            style={{ background: 'transparent', border: '1px solid var(--glass-border)', padding: '0.4rem 0.6rem', borderRadius: '4px', color: 'white', fontSize: '0.75rem', cursor: 'pointer' }}
-                          >Status</button>
-                        </div>
-                      </td>
+                      {user?.role !== 'parent' && user?.role !== 'student' && (
+                        <td style={{ padding: '1rem', textAlign: 'right' }}>
+                          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
+                            <button 
+                              onClick={() => handleClockAction(stu.id, 'in')}
+                              style={{ padding: '0.4rem 0.8rem', background: 'var(--success)', border: 'none', borderRadius: '4px', color: 'white', fontSize: '0.75rem', cursor: 'pointer' }}
+                            >In</button>
+                            <button 
+                              onClick={() => handleClockAction(stu.id, 'out')}
+                              style={{ padding: '0.4rem 0.8rem', background: 'var(--primary-color)', border: 'none', borderRadius: '4px', color: 'white', fontSize: '0.75rem', cursor: 'pointer' }}
+                            >Out</button>
+                            <button 
+                              onClick={() => toggleStatus(stu.id)}
+                              style={{ background: 'transparent', border: '1px solid var(--glass-border)', padding: '0.4rem 0.6rem', borderRadius: '4px', color: 'white', fontSize: '0.75rem', cursor: 'pointer' }}
+                            >Status</button>
+                          </div>
+                        </td>
+                      )}
                     </tr>
                   );
                 })}

@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, BookOpen, User, Download, Plus, X, Trash2 } from 'lucide-react';
 import { collection, getDocs, addDoc, deleteDoc, doc, query, where, orderBy } from 'firebase/firestore';
 import { db } from '../../firebase';
+import { useAuth } from '../../context/AuthContext';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
 const Timetable = () => {
+  const { user } = useAuth();
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
   const [selectedDay, setSelectedDay] = useState('Monday');
   const [periods, setPeriods] = useState([]);
@@ -93,9 +95,11 @@ const Timetable = () => {
           <button onClick={generatePDF} className="btn-primary" style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'white' }}>
             <Download size={18} /> Export Timetable
           </button>
-          <button className="btn-primary" onClick={() => setShowAddModal(true)}>
-            <Plus size={18} /> Add Period
-          </button>
+          {user?.role !== 'parent' && user?.role !== 'student' && (
+            <button className="btn-primary" onClick={() => setShowAddModal(true)}>
+              <Plus size={18} /> Add Period
+            </button>
+          )}
         </div>
       </div>
 
@@ -136,12 +140,14 @@ const Timetable = () => {
                 gap: '0.75rem',
                 position: 'relative'
               }}>
-                <button 
-                  onClick={() => handleDelete(period.id)}
-                  style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'transparent', border: 'none', color: 'var(--error)', cursor: 'pointer' }}
-                >
-                  <Trash2 size={16} />
-                </button>
+                {user?.role !== 'parent' && user?.role !== 'student' && (
+                  <button 
+                    onClick={() => handleDelete(period.id)}
+                    style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'transparent', border: 'none', color: 'var(--error)', cursor: 'pointer' }}
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                )}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingRight: '1.5rem' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--primary-color)', fontSize: '0.85rem', fontWeight: '700' }}>
                     <Clock size={16} />

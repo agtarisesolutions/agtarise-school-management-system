@@ -15,7 +15,7 @@ const StudentList = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingStudent, setEditingStudent] = useState(null);
   const [formData, setFormData] = useState({
-    name: '', class: '', gender: 'Male', parent: '', phone: '', status: 'Active'
+    name: '', class: '', gender: 'Male', parent: '', phone: '', status: 'Active', passportUrl: ''
   });
 
   const fetchStudents = async () => {
@@ -65,7 +65,8 @@ const StudentList = () => {
       gender: student.gender,
       parent: student.parent,
       phone: student.phone,
-      status: student.status
+      status: student.status,
+      passportUrl: student.passportUrl || ''
     });
     setShowModal(true);
   };
@@ -73,7 +74,7 @@ const StudentList = () => {
   const closeModal = () => {
     setShowModal(false);
     setEditingStudent(null);
-    setFormData({ name: '', class: '', gender: 'Male', parent: '', phone: '', status: 'Active' });
+    setFormData({ name: '', class: '', gender: 'Male', parent: '', phone: '', status: 'Active', passportUrl: '' });
   };
 
   const handleDelete = async (id) => {
@@ -191,8 +192,8 @@ const StudentList = () => {
                     <td style={{ padding: '1rem', fontSize: '0.85rem', color: 'var(--primary-color)', fontWeight: '600' }}>{stu.studentId}</td>
                     <td style={{ padding: '1rem' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                        <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--glass-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          {stu.name ? stu.name.charAt(0) : '?'}
+                        <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--glass-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                          {stu.passportUrl ? <img src={stu.passportUrl} alt={stu.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (stu.name ? stu.name.charAt(0) : '?')}
                         </div>
                         <span style={{ fontWeight: '500' }}>{stu.name}</span>
                       </div>
@@ -242,12 +243,16 @@ const StudentList = () => {
           background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
           display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
         }}>
-          <div className="glass-card" style={{ width: '100%', maxWidth: '500px', padding: '2rem', position: 'relative' }}>
+          <div className="glass-card" style={{ width: '100%', maxWidth: '500px', padding: '2rem', position: 'relative', maxHeight: '90vh', overflowY: 'auto' }}>
             <button onClick={closeModal} style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'transparent', border: 'none', color: 'white', cursor: 'pointer' }}>
               <X size={24} />
             </button>
             <h2 style={{ marginBottom: '1.5rem' }}>{editingStudent ? 'Edit Student Profile' : 'Admit New Student'}</h2>
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Passport Photo URL (Optional)</label>
+                <input type="text" placeholder="https://example.com/photo.jpg" value={formData.passportUrl} onChange={e => setFormData({...formData, passportUrl: e.target.value})} style={{ width: '100%', padding: '0.75rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'white' }} />
+              </div>
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Full Name</label>
                 <input required type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} style={{ width: '100%', padding: '0.75rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'white' }} />

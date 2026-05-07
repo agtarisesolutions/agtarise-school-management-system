@@ -6,6 +6,7 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
 const ResultChecker = () => {
+  const { user } = useAuth();
   const [stuId, setStuId] = useState('');
   const [showResult, setShowResult] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -14,14 +15,26 @@ const ResultChecker = () => {
   const [studentDetails, setStudentDetails] = useState(null);
   const [resultData, setResultData] = useState([]);
 
-  const handleSearch = async (e) => {
+  useEffect(() => {
+    if ((user?.role === 'parent' || user?.role === 'student') && user?.linkedStudentId) {
+      setStuId(user.linkedStudentId);
+      performSearch(user.linkedStudentId);
+    }
+  }, [user]);
+
+  const handleSearch = (e) => {
     e.preventDefault();
+    performSearch(stuId);
+  };
+
+  const performSearch = async (searchId) => {
+    if (!searchId) return;
     setLoading(true);
     setError('');
     
     try {
       // 1. Fetch Student Details
-      const studentQuery = query(collection(db, "students"), where("studentId", "==", stuId));
+      const studentQuery = query(collection(db, "students"), where("studentId", "==", searchId));
       const studentSnap = await getDocs(studentQuery);
       
       if (studentSnap.empty) {
@@ -34,11 +47,11 @@ const ResultChecker = () => {
       setStudentDetails({
         name: studentInfo.name,
         class: studentInfo.class,
-        term: 'Current Term 2025/2026' // This could be dynamic based on a global settings document
+        term: 'Current Term 2025/2026'
       });
 
       // 2. Fetch Grades for this student
-      const gradesQuery = query(collection(db, "grades"), where("studentId", "==", stuId));
+      const gradesQuery = query(collection(db, "grades"), where("studentId", "==", searchId));
       const gradesSnap = await getDocs(gradesQuery);
       
       if (gradesSnap.empty) {
@@ -105,7 +118,6 @@ const ResultChecker = () => {
       {!showResult ? (
         <div className="glass-card" style={{ padding: '3rem', textAlign: 'center' }}>
           <Award size={60} color="var(--primary-color)" style={{ marginBottom: '1.5rem' }} />
-          <h3 style={{ marginBottom: '1.5rem' }}>Enter Student ID to View Result</h3>
           
           {error && (
             <div style={{ marginBottom: '1.5rem', padding: '1rem', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid var(--error)', borderRadius: 'var(--radius-md)', color: 'var(--error)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
@@ -113,32 +125,42 @@ const ResultChecker = () => {
             </div>
           )}
 
-          <form onSubmit={handleSearch} style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
-            <input 
-              type="text" 
-              placeholder="e.g. STU1234"
-              value={stuId}
-              onChange={(e) => setStuId(e.target.value)}
-              style={{
-                width: '100%',
-                maxWidth: '300px',
-                padding: '0.8rem 1.5rem',
-                background: 'var(--glass-bg)',
-                border: '1px solid var(--glass-border)',
-                borderRadius: 'var(--radius-md)',
-                color: 'white',
-                outline: 'none',
-                fontSize: '1rem'
-              }}
-              required
-            />
-            <button type="submit" className="btn-primary" style={{ padding: '0 2rem' }} disabled={loading}>
-              {loading ? 'Searching...' : <>Check Result <ChevronRight size={18} /></>}
-            </button>
-          </form>
-          <p style={{ marginTop: '1.5rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-            Note: Use your unique Admission Number (e.g., STU5678). Contact the school admin if you've lost it.
-          </p>
+          {user?.role === 'parent' || user?.role === 'student' ? (
+            <div style={{ padding: '2rem' }}>
+              <h3 style={{ marginBottom: '1rem' }}>Loading Your Records...</h3>
+              {loading && <p style={{ color: 'var(--text-muted)' }}>Fetching authorized results from the portal.</p>}
+            </div>
+          ) : (
+            <>
+              <h3 style={{ marginBottom: '1.5rem' }}>Enter Student ID to View Result</h3>
+              <form onSubmit={handleSearch} style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+                <input 
+                  type="text" 
+                  placeholder="e.g. STU1234"
+                  value={stuId}
+                  onChange={(e) => setStuId(e.target.value)}
+                  style={{
+                    width: '100%',
+                    maxWidth: '300px',
+                    padding: '0.8rem 1.5rem',
+                    background: 'var(--glass-bg)',
+                    border: '1px solid var(--glass-border)',
+                    borderRadius: 'var(--radius-md)',
+                    color: 'white',
+                    outline: 'none',
+                    fontSize: '1rem'
+                  }}
+                  required
+                />
+                <button type="submit" className="btn-primary" style={{ padding: '0 2rem' }} disabled={loading}>
+                  {loading ? 'Searching...' : <>Check Result <ChevronRight size={18} /></>}
+                </button>
+              </form>
+              <p style={{ marginTop: '1.5rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                Note: Use your unique Admission Number (e.g., STU5678). Contact the school admin if you've lost it.
+              </p>
+            </>
+          )}
         </div>
       ) : (
         <div className="glass-card" style={{ padding: '2rem' }}>

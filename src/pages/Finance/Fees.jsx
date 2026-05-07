@@ -1,16 +1,20 @@
 import React, { useState } from 'react';
 import { CreditCard, Download, Search, CheckCircle, Clock, AlertCircle, X, Plus } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
 const Fees = () => {
+  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [showCollectModal, setShowCollectModal] = useState(false);
+  
+  // In a real app, this would be fetched from Firestore based on user.linkedStudentId
   const [transactions, setTransactions] = useState([
-    { id: 1, student: 'John Doe', amount: '₦150,000', type: 'Tuition Fee', date: '2024-04-20', status: 'Paid' },
-    { id: 2, student: 'Jane Smith', amount: '₦45,000', type: 'Bus Fee', date: '2024-04-18', status: 'Pending' },
-    { id: 3, student: 'Alice Brown', amount: '₦12,500', type: 'Lab Fee', date: '2024-04-15', status: 'Paid' },
-    { id: 4, student: 'Bob Wilson', amount: '₦150,000', type: 'Tuition Fee', date: '2024-04-12', status: 'Overdue' },
+    { id: 1, studentId: 'STU1234', student: 'John Doe', amount: '₦150,000', type: 'Tuition Fee', date: '2024-04-20', status: 'Paid' },
+    { id: 2, studentId: 'STU5678', student: 'Jane Smith', amount: '₦45,000', type: 'Bus Fee', date: '2024-04-18', status: 'Pending' },
+    { id: 3, studentId: 'STU9012', student: 'Alice Brown', amount: '₦12,500', type: 'Lab Fee', date: '2024-04-15', status: 'Paid' },
+    { id: 4, studentId: 'STU3456', student: 'Bob Wilson', amount: '₦150,000', type: 'Tuition Fee', date: '2024-04-12', status: 'Overdue' },
   ]);
 
   const handleCollect = (e) => {
@@ -45,39 +49,46 @@ const Fees = () => {
     doc.save(`receipt_${tx.student.replace(/\s+/g, '_')}.pdf`);
   };
 
-  const filteredTransactions = transactions.filter(tx => 
-    tx.student.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    tx.type.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredTransactions = transactions.filter(tx => {
+    if (user?.role === 'parent' && tx.studentId !== user.linkedStudentId) {
+      return false; // Parent can only see their child's fees
+    }
+    return tx.student.toLowerCase().includes(searchTerm.toLowerCase()) ||
+           tx.type.toLowerCase().includes(searchTerm.toLowerCase());
+  });
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>Financial <span className="text-gradient">Control</span></h1>
-          <p style={{ color: 'var(--text-muted)' }}>Monitor school fees, payments, and overall financial health.</p>
+          <p style={{ color: 'var(--text-muted)' }}>{user?.role === 'parent' ? "Monitor your child's school fees and payments." : "Monitor school fees, payments, and overall financial health."}</p>
         </div>
-        <button className="btn-primary" onClick={() => setShowCollectModal(true)}>
-          <CreditCard size={20} /> Collect Payment
-        </button>
+        {user?.role !== 'parent' && (
+          <button className="btn-primary" onClick={() => setShowCollectModal(true)}>
+            <CreditCard size={20} /> Collect Payment
+          </button>
+        )}
       </div>
 
-      <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}>
-        <div className="glass-card" style={{ flex: 1, minWidth: '300px', padding: '1.5rem', background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.1), transparent)' }}>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '0.5rem' }}>Total Revenue (Term)</p>
-          <h2 style={{ fontSize: '2rem' }}>₦12.8M</h2>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--success)', fontSize: '0.8rem', marginTop: '1rem' }}>
-            <CheckCircle size={14} /> 85% Collected
+      {user?.role !== 'parent' && (
+        <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}>
+          <div className="glass-card" style={{ flex: 1, minWidth: '300px', padding: '1.5rem', background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.1), transparent)' }}>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '0.5rem' }}>Total Revenue (Term)</p>
+            <h2 style={{ fontSize: '2rem' }}>₦12.8M</h2>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--success)', fontSize: '0.8rem', marginTop: '1rem' }}>
+              <CheckCircle size={14} /> 85% Collected
+            </div>
+          </div>
+          <div className="glass-card" style={{ flex: 1, minWidth: '300px', padding: '1.5rem' }}>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '0.5rem' }}>Outstanding Balances</p>
+            <h2 style={{ fontSize: '2rem' }}>₦2.4M</h2>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--error)', fontSize: '0.8rem', marginTop: '1rem' }}>
+              <AlertCircle size={14} /> 42 Students Overdue
+            </div>
           </div>
         </div>
-        <div className="glass-card" style={{ flex: 1, minWidth: '300px', padding: '1.5rem' }}>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '0.5rem' }}>Outstanding Balances</p>
-          <h2 style={{ fontSize: '2rem' }}>₦2.4M</h2>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--error)', fontSize: '0.8rem', marginTop: '1rem' }}>
-            <AlertCircle size={14} /> 42 Students Overdue
-          </div>
-        </div>
-      </div>
+      )}
 
       <div className="glass-card" style={{ padding: '1.5rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>

@@ -13,6 +13,7 @@ const Login = () => {
   const [name, setName] = useState('');
   const [schoolName, setSchoolName] = useState('');
   const [assignedClass, setAssignedClass] = useState('SS3 A');
+  const [linkedStudentId, setLinkedStudentId] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { login, signup } = useAuth();
@@ -28,6 +29,8 @@ const Login = () => {
         const userData = { role, name, schoolName };
         if (role === 'teacher') {
           userData.assignedClass = assignedClass;
+        } else if (role === 'parent' || role === 'student') {
+          userData.linkedStudentId = linkedStudentId;
         }
         await signup(email, password, userData);
       } else {
@@ -68,7 +71,7 @@ const Login = () => {
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           {error && <div style={{ color: 'var(--error)', fontSize: '0.85rem', textAlign: 'center', background: 'rgba(239, 68, 68, 0.1)', padding: '0.5rem', borderRadius: '4px' }}>{error}</div>}
           
-          {isRegistering && (
+            {isRegistering && (
             <>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                 <label style={{ fontSize: '0.9rem', fontWeight: '500' }}>Full Name</label>
@@ -103,6 +106,16 @@ const Login = () => {
                       <option key={cls} value={cls}>{cls}</option>
                     ))}
                   </select>
+                </div>
+              )}
+              
+              {(role === 'parent' || role === 'student') && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  <label style={{ fontSize: '0.9rem', fontWeight: '500' }}>Link Student ID</label>
+                  <div style={{ position: 'relative' }}>
+                    <User style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} size={18} />
+                    <input type="text" placeholder="e.g. STU1234" value={linkedStudentId} onChange={(e) => setLinkedStudentId(e.target.value)} style={{ width: '100%', padding: '0.75rem 1rem 0.75rem 3rem', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'white', outline: 'none' }} required />
+                  </div>
                 </div>
               )}
             </>
