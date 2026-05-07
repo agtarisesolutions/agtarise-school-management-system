@@ -61,11 +61,14 @@ const ResultChecker = () => {
           exam: data.examScore,
           total: data.totalScore,
           grade: data.grade,
-          remark: remark
+          remark: remark,
+          resultUrl: data.resultUrl || ''
         };
       });
 
+      const mainResultUrl = fetchedGrades.find(g => g.resultUrl)?.resultUrl || '';
       setResultData(fetchedGrades);
+      setStudentDetails(prev => ({ ...prev, resultUrl: mainResultUrl }));
       setShowResult(true);
 
     } catch (err) {
@@ -144,9 +147,16 @@ const ResultChecker = () => {
               <h2 style={{ fontSize: '1.5rem', marginBottom: '0.25rem' }}>{studentDetails?.name}</h2>
               <p style={{ color: 'var(--text-muted)' }}>{studentDetails?.class} | {studentDetails?.term}</p>
             </div>
-            <button onClick={downloadResult} className="btn-primary">
-              <Download size={18} /> Download Report Sheet
-            </button>
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              {studentDetails?.resultUrl && (
+                <a href={studentDetails.resultUrl} target="_blank" rel="noopener noreferrer" className="btn-secondary" style={{ textDecoration: 'none' }}>
+                  <FileText size={18} /> View Document
+                </a>
+              )}
+              <button onClick={downloadResult} className="btn-primary">
+                <Download size={18} /> Download Report Sheet
+              </button>
+            </div>
           </div>
 
           <div style={{ overflowX: 'auto' }}>
