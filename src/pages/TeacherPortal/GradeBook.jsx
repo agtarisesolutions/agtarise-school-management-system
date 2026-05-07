@@ -157,18 +157,42 @@ const GradeBook = () => {
     }
   };
 
-  const handleBulkUpload = () => {
-    const lines = bulkText.split('\n');
-    const newGrades = { ...grades };
-    lines.forEach(line => {
-      const [id, test, exam] = line.split(',').map(s => s.trim());
-      if (id && newGrades[id]) {
-        newGrades[id] = { ...newGrades[id], test: Number(test) || 0, exam: Number(exam) || 0 };
+  const downloadTemplate = () => {
+    const headers = "StudentID,TestScore,ExamScore\n";
+    const sampleData = students.map(s => `${s.studentId},0,0`).join("\n");
+    const blob = new Blob([headers + sampleData], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Gradebook_Template_${selectedClass}_${selectedSubject}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
+  const handleCsvUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target.result;
+      const lines = text.split('\n');
+      const newGrades = { ...grades };
+      
+      // Skip the header row (index 0)
+      for (let i = 1; i < lines.length; i++) {
+        if (!lines[i].trim()) continue;
+        const [id, test, exam] = lines[i].split(',').map(s => s.trim());
+        if (id && newGrades[id]) {
+          newGrades[id] = { ...newGrades[id], test: Number(test) || 0, exam: Number(exam) || 0 };
+        }
       }
-    });
-    setGrades(newGrades);
-    setShowBulkModal(false);
-    setBulkText('');
+      setGrades(newGrades);
+      setShowBulkModal(false);
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 3000);
+    };
+    reader.readAsText(file);
   };
 
   const openUploadModal = (student) => {
@@ -302,18 +326,33 @@ const GradeBook = () => {
 
       {showBulkModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-          <div className="glass-card" style={{ width: '100%', maxWidth: '500px', padding: '2rem', position: 'relative' }}>
+          <div className="glass-card" style={{ width: '100%', maxWidth: '450px', padding: '2rem', position: 'relative' }}>
             <button onClick={() => setShowBulkModal(false)} style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'transparent', border: 'none', color: 'white', cursor: 'pointer' }}><X size={24} /></button>
             <h2 style={{ marginBottom: '1rem' }}>Bulk Result Upload</h2>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>Format: <b>StudentID, Test, Exam</b> (one student per line)</p>
-            <textarea 
-              value={bulkText} onChange={(e) => setBulkText(e.target.value)}
-              placeholder="STU1234, 30, 55&#10;STU5678, 25, 48"
-              style={{ width: '100%', height: '200px', padding: '1rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'white', fontFamily: 'monospace' }}
-            />
-            <button className="btn-primary" style={{ width: '100%', marginTop: '1.5rem', justifyContent: 'center' }} onClick={handleBulkUpload}>
-              Apply scores to Gradebook
-            </button>
+            <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
+              Download the class template, fill in the Test and Exam scores using Excel, and upload the CSV file here.
+            </p>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <button 
+                onClick={downloadTemplate} 
+                className="btn-secondary" 
+                style={{ width: '100%', justifyContent: 'center', background: 'rgba(99, 102, 241, 0.1)', color: 'var(--primary-color)', border: '1px solid rgba(99, 102, 241, 0.2)', padding: '0.75rem', borderRadius: 'var(--radius-md)', cursor: 'pointer' }}
+              >
+                <FileText size={18} style={{ marginRight: '0.5rem' }} /> Download CSV Template
+              </button>
+
+              <div style={{ marginTop: '1rem', border: '1px dashed var(--glass-border)', padding: '1.5rem', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
+                <Upload size={32} color="var(--text-muted)" style={{ marginBottom: '0.5rem' }} />
+                <p style={{ fontSize: '0.9rem', marginBottom: '1rem' }}>Select completed CSV file</p>
+                <input 
+                  type="file" 
+                  accept=".csv"
+                  onChange={handleCsvUpload}
+                  style={{ width: '100%', color: 'var(--text-muted)', fontSize: '0.85rem' }}
+                />
+              </div>
+            </div>
           </div>
         </div>
       )}
