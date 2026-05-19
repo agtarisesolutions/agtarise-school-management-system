@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Wallet, DollarSign, Download, CheckCircle, Clock, AlertCircle, Plus, Search, X, Printer } from 'lucide-react';
-import jsPDF from 'jsPDF';
+import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
 const Payroll = () => {
