@@ -3,7 +3,7 @@ import { Plus, Search, MoreVertical, Edit2, Trash2, Download, TrendingUp, X } fr
 import { useNavigate } from 'react-router-dom';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
-import { collection, getDocs, addDoc, deleteDoc, doc } from 'firebase/firestore';
+import { collection, getDocs, addDoc, deleteDoc, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
 
 const Classes = () => {
@@ -12,6 +12,7 @@ const Classes = () => {
   const [classes, setClasses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editingClass, setEditingClass] = useState(null);
   const [newClass, setNewClass] = useState({
     name: '', level: 'Secondary', teacher: ''
   });
@@ -48,6 +49,23 @@ const Classes = () => {
       fetchClasses();
     } catch (error) {
       console.error("Error adding class: ", error);
+    }
+  };
+
+  const handleEditClass = async (e) => {
+    e.preventDefault();
+    try {
+      const classRef = doc(db, "classes", editingClass.id);
+      await updateDoc(classRef, {
+        name: editingClass.name,
+        level: editingClass.level,
+        teacher: editingClass.teacher,
+        students: Number(editingClass.students) || 0
+      });
+      setEditingClass(null);
+      fetchClasses();
+    } catch (error) {
+      console.error("Error updating class: ", error);
     }
   };
 
@@ -185,7 +203,8 @@ const Classes = () => {
                   <td style={{ padding: '1rem' }}>{item.teacher}</td>
                   <td style={{ padding: '1rem', textAlign: 'right' }}>
                     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
-                      <button onClick={() => handleDelete(item.id)} style={{ background: 'transparent', border: 'none', color: 'var(--error)', cursor: 'pointer' }}><Trash2 size={16} /></button>
+                      <button onClick={() => setEditingClass(item)} style={{ background: 'transparent', border: 'none', color: 'var(--primary-color)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}><Edit2 size={16} /></button>
+                      <button onClick={() => handleDelete(item.id)} style={{ background: 'transparent', border: 'none', color: 'var(--error)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}><Trash2 size={16} /></button>
                     </div>
                   </td>
                 </tr>
@@ -227,6 +246,48 @@ const Classes = () => {
               </div>
 
               <button type="submit" className="btn-primary" style={{ marginTop: '1rem', justifyContent: 'center' }}>Save Class</button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {editingClass && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
+          background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
+        }}>
+          <div className="glass-card" style={{ width: '100%', maxWidth: '400px', padding: '2rem', position: 'relative' }}>
+            <button onClick={() => setEditingClass(null)} style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'transparent', border: 'none', color: 'white', cursor: 'pointer' }}>
+              <X size={24} />
+            </button>
+            <h2 style={{ marginBottom: '1.5rem' }}>Edit Class</h2>
+            <form onSubmit={handleEditClass} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Class Name</label>
+                <input required type="text" placeholder="e.g. SS3 A" value={editingClass.name} onChange={e => setEditingClass({...editingClass, name: e.target.value})} style={{ width: '100%', padding: '0.75rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'white' }} />
+              </div>
+              
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Level</label>
+                <select value={editingClass.level} onChange={e => setEditingClass({...editingClass, level: e.target.value})} style={{ width: '100%', padding: '0.75rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'white' }}>
+                  <option value="Nursery">Nursery</option>
+                  <option value="Primary">Primary</option>
+                  <option value="Secondary">Secondary</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Class Teacher</label>
+                <input required type="text" placeholder="e.g. Mr. Okoro" value={editingClass.teacher} onChange={e => setEditingClass({...editingClass, teacher: e.target.value})} style={{ width: '100%', padding: '0.75rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'white' }} />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Total Students</label>
+                <input required type="number" placeholder="e.g. 25" value={editingClass.students} onChange={e => setEditingClass({...editingClass, students: e.target.value})} style={{ width: '100%', padding: '0.75rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'white' }} />
+              </div>
+
+              <button type="submit" className="btn-primary" style={{ marginTop: '1rem', justifyContent: 'center' }}>Update Class</button>
             </form>
           </div>
         </div>
