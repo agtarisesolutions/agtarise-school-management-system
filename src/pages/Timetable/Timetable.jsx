@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, BookOpen, User, Download, Plus, X, Trash2 } from 'lucide-react';
-import { collection, getDocs, addDoc, deleteDoc, doc, query, where, orderBy } from 'firebase/firestore';
+import { Calendar, Clock, BookOpen, User, Download, Plus, X, Trash2, Edit2 } from 'lucide-react';
+import { collection, getDocs, addDoc, deleteDoc, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { useAuth } from '../../context/AuthContext';
 import jsPDF from 'jspdf';
@@ -13,6 +13,7 @@ const Timetable = () => {
   const [periods, setPeriods] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editingPeriod, setEditingPeriod] = useState(null);
   const [newPeriod, setNewPeriod] = useState({
     timeStart: '', timeEnd: '', subject: '', teacher: '', day: 'Monday'
   });
@@ -65,6 +66,24 @@ const Timetable = () => {
       } catch (error) {
         console.error("Error deleting period: ", error);
       }
+    }
+  };
+
+  const handleEditPeriod = async (e) => {
+    e.preventDefault();
+    try {
+      const [ts, te] = editingPeriod.time.split(' - ');
+      await updateDoc(doc(db, "timetable", editingPeriod.id), {
+        day: editingPeriod.day,
+        time: editingPeriod.time,
+        subject: editingPeriod.subject,
+        teacher: editingPeriod.teacher,
+        timeStartSort: ts?.trim() || ''
+      });
+      setEditingPeriod(null);
+      fetchPeriods();
+    } catch (error) {
+      console.error("Error updating period: ", error);
     }
   };
 
@@ -141,12 +160,20 @@ const Timetable = () => {
                 position: 'relative'
               }}>
                 {user?.role !== 'parent' && user?.role !== 'student' && (
-                  <button 
-                    onClick={() => handleDelete(period.id)}
-                    style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'transparent', border: 'none', color: 'var(--error)', cursor: 'pointer' }}
-                  >
-                    <Trash2 size={16} />
-                  </button>
+                  <div style={{ position: 'absolute', top: '0.75rem', right: '0.75rem', display: 'flex', gap: '0.35rem' }}>
+                    <button 
+                      onClick={() => setEditingPeriod({...period})}
+                      style={{ background: 'transparent', border: 'none', color: 'var(--primary-color)', cursor: 'pointer' }}
+                    >
+                      <Edit2 size={14} />
+                    </button>
+                    <button 
+                      onClick={() => handleDelete(period.id)}
+                      style={{ background: 'transparent', border: 'none', color: 'var(--error)', cursor: 'pointer' }}
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
                 )}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingRight: '1.5rem' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--primary-color)', fontSize: '0.85rem', fontWeight: '700' }}>
@@ -209,6 +236,42 @@ const Timetable = () => {
               </div>
 
               <button type="submit" className="btn-primary" style={{ marginTop: '1rem', justifyContent: 'center' }}>Save Period</button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {editingPeriod && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
+          background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
+        }}>
+          <div className="glass-card" style={{ width: '100%', maxWidth: '400px', padding: '2rem', position: 'relative' }}>
+            <button onClick={() => setEditingPeriod(null)} style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'transparent', border: 'none', color: 'white', cursor: 'pointer' }}>
+              <X size={24} />
+            </button>
+            <h2 style={{ marginBottom: '1.5rem' }}>Edit Period</h2>
+            <form onSubmit={handleEditPeriod} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Day</label>
+                <select value={editingPeriod.day} onChange={e => setEditingPeriod({...editingPeriod, day: e.target.value})} style={{ width: '100%', padding: '0.75rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'white' }}>
+                  {['Monday','Tuesday','Wednesday','Thursday','Friday'].map(d => <option key={d} value={d}>{d}</option>)}
+                </select>
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Time (e.g. 08:00 - 09:00)</label>
+                <input required type="text" value={editingPeriod.time} onChange={e => setEditingPeriod({...editingPeriod, time: e.target.value})} style={{ width: '100%', padding: '0.75rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'white' }} />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Subject</label>
+                <input required type="text" value={editingPeriod.subject} onChange={e => setEditingPeriod({...editingPeriod, subject: e.target.value})} style={{ width: '100%', padding: '0.75rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'white' }} />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Teacher</label>
+                <input type="text" value={editingPeriod.teacher || ''} onChange={e => setEditingPeriod({...editingPeriod, teacher: e.target.value})} style={{ width: '100%', padding: '0.75rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'white' }} />
+              </div>
+              <button type="submit" className="btn-primary" style={{ marginTop: '0.5rem', justifyContent: 'center' }}>Update Period</button>
             </form>
           </div>
         </div>

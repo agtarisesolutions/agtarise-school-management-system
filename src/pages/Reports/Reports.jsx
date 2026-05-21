@@ -1,9 +1,13 @@
-import React from 'react';
-import { FileText, Download, BarChart2, PieChart, TrendingUp, Calendar } from 'lucide-react';
+import React, { useState } from 'react';
+import { Download, BarChart2, TrendingUp, Calendar } from 'lucide-react';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '../../firebase';
 
 const Reports = () => {
+  const [loading, setLoading] = useState(false);
+
   const generatePDF = (title, data, columns) => {
     const doc = new jsPDF();
     doc.text(title, 14, 15);
@@ -15,26 +19,76 @@ const Reports = () => {
     doc.save(`${title.toLowerCase().replace(/\s+/g, '_')}.pdf`);
   };
 
-  const academicData = [
-    ['Mathematics', 'A', '92%'],
-    ['English', 'B+', '85%'],
-    ['Physics', 'A-', '88%'],
-    ['Chemistry', 'B', '78%'],
-  ];
+  const handleAcademicReport = async () => {
+    setLoading(true);
+    try {
+      const snap = await getDocs(collection(db, 'grades'));
+      let data = [];
+      if (snap.empty) {
+        data = [['Mathematics', 'A', '92%'], ['English', 'B+', '85%']]; // Fallback
+      } else {
+        data = snap.docs.map(doc => {
+          const d = doc.data();
+          return [d.subjectName || 'Unknown', d.grade || '-', d.totalScore ? `${d.totalScore}%` : '-'];
+        });
+      }
+      generatePDF('Academic Performance Report', data, ['Subject', 'Grade', 'Score']);
+    } catch (error) {
+      console.error(error);
+      generatePDF('Academic Performance Report', [['Data Fetch Failed', '-', '-']], ['Subject', 'Grade', 'Score']);
+    }
+    setLoading(false);
+  };
 
-  const financialData = [
-    ['Tuition Fees', '₦8.5M', 'Collected'],
-    ['Transportation', '₦1.2M', 'Pending'],
-    ['Lab Fees', '₦450k', 'Collected'],
-    ['Extracurricular', '₦300k', 'Pending'],
-  ];
+  const handleFinancialReport = async () => {
+    setLoading(true);
+    try {
+      const snap = await getDocs(collection(db, 'fees'));
+      let data = [];
+      if (snap.empty) {
+        data = [['Tuition Fees', '₦8.5M', 'Collected'], ['Transportation', '₦1.2M', 'Pending']]; // Fallback
+      } else {
+        data = snap.docs.map(doc => {
+          const d = doc.data();
+          return [d.type || 'Fee', d.amount || '0', d.status || 'Pending'];
+        });
+      }
+      generatePDF('Financial Statement Report', data, ['Description', 'Amount', 'Status']);
+    } catch (error) {
+      console.error(error);
+    }
+    setLoading(false);
+  };
+
+  const handleAttendanceReport = async () => {
+    setLoading(true);
+    try {
+      const snap = await getDocs(collection(db, 'attendance'));
+      let data = [];
+      if (snap.empty) {
+        data = [['Students', '94%'], ['Staff', '98%']]; // Fallback
+      } else {
+        data = snap.docs.map(doc => {
+          const d = doc.data();
+          return [d.name || 'Unknown', d.status || 'Present', d.date || '-'];
+        });
+        generatePDF('Attendance Summary Report', data, ['Name', 'Status', 'Date']);
+        setLoading(false);
+        return;
+      }
+      generatePDF('Attendance Summary Report', data, ['Category', 'Average']);
+    } catch (error) {
+      console.error(error);
+    }
+    setLoading(false);
+  };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>Reports & <span className="text-gradient">Analytics</span></h1>
-          <p style={{ color: 'var(--text-muted)' }}>Generate automated reports for academics, finance, and attendance.</p>
+          <p style={{ color: 'var(--text-muted)' }}>Generate and download automated reports for academics, finance, and attendance.</p>
         </div>
       </div>
 
@@ -50,11 +104,12 @@ const Reports = () => {
             </div>
           </div>
           <button 
-            onClick={() => generatePDF('Academic Performance Report', academicData, ['Subject', 'Grade', 'Score'])}
+            onClick={handleAcademicReport}
             className="btn-primary" 
             style={{ width: '100%', justifyContent: 'center' }}
+            disabled={loading}
           >
-            <Download size={18} /> Download PDF
+            <Download size={18} /> {loading ? 'Processing...' : 'Download PDF'}
           </button>
         </div>
 
@@ -69,11 +124,12 @@ const Reports = () => {
             </div>
           </div>
           <button 
-            onClick={() => generatePDF('Financial Statement Report', financialData, ['Description', 'Amount', 'Status'])}
+            onClick={handleFinancialReport}
             className="btn-primary" 
             style={{ width: '100%', justifyContent: 'center' }}
+            disabled={loading}
           >
-            <Download size={18} /> Download PDF
+            <Download size={18} /> {loading ? 'Processing...' : 'Download PDF'}
           </button>
         </div>
 
@@ -88,30 +144,14 @@ const Reports = () => {
             </div>
           </div>
           <button 
-            onClick={() => generatePDF('Attendance Summary Report', [['Students', '94%'], ['Staff', '98%']], ['Category', 'Average'])}
+            onClick={handleAttendanceReport}
             className="btn-primary" 
             style={{ width: '100%', justifyContent: 'center' }}
+            disabled={loading}
           >
-            <Download size={18} /> Download PDF
+            <Download size={18} /> {loading ? 'Processing...' : 'Download PDF'}
           </button>
         </div>
-      </div>
-
-      <div className="glass-card" style={{ padding: '2rem', textAlign: 'center' }}>
-        <PieChart size={48} color="var(--text-muted)" style={{ marginBottom: '1rem' }} />
-        <h3 style={{ marginBottom: '0.5rem' }}>Advanced Analytics Dashboard</h3>
-        <p style={{ color: 'var(--text-muted)', maxWidth: '500px', margin: '0 auto 1.5rem auto' }}>
-          Upgrade to Enterprise to unlock AI-powered insights, predictive student performance, and automated tax reporting.
-        </p>
-        <button style={{ 
-          padding: '0.75rem 2rem', 
-          background: 'transparent', 
-          border: '1px solid var(--primary-color)', 
-          color: 'var(--primary-color)',
-          borderRadius: 'var(--radius-md)',
-          fontWeight: '600',
-          cursor: 'pointer'
-        }}>Learn More</button>
       </div>
     </div>
   );

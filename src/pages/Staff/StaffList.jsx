@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { UserPlus, Search, Mail, Phone, BookOpen, MoreVertical, Download, X, Trash2 } from 'lucide-react';
+import { UserPlus, Search, Mail, Phone, BookOpen, Download, X, Trash2, Edit2 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { collection, getDocs, addDoc, deleteDoc, doc } from 'firebase/firestore';
+import { collection, getDocs, addDoc, deleteDoc, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
 
 const StaffList = () => {
   const [staff, setStaff] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editingStaff, setEditingStaff] = useState(null);
   const [newStaff, setNewStaff] = useState({
     name: '', role: 'Teacher', subject: '', email: '', phone: '',
     dob: '', maritalStatus: 'Single', address: '', nationality: 'Nigerian',
@@ -81,6 +82,27 @@ const StaffList = () => {
       } catch (error) {
         console.error("Error deleting staff: ", error);
       }
+    }
+  };
+
+  const handleEditStaff = async (e) => {
+    e.preventDefault();
+    try {
+      const staffRef = doc(db, "staff", editingStaff.id);
+      await updateDoc(staffRef, {
+        name: editingStaff.name,
+        role: editingStaff.role,
+        subject: editingStaff.subject || '',
+        email: editingStaff.email,
+        phone: editingStaff.phone,
+        assignedClass: editingStaff.assignedClass || '',
+        maritalStatus: editingStaff.maritalStatus || '',
+        address: editingStaff.address || '',
+      });
+      setEditingStaff(null);
+      fetchStaff();
+    } catch (error) {
+      console.error("Error updating staff: ", error);
     }
   };
 
@@ -191,17 +213,7 @@ const StaffList = () => {
               </div>
 
               <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <button style={{ 
-                  flex: 1, 
-                  padding: '0.5rem', 
-                  background: 'var(--glass-bg)', 
-                  border: '1px solid var(--glass-border)',
-                  borderRadius: 'var(--radius-md)',
-                  color: 'white',
-                  fontSize: '0.8rem',
-                  cursor: 'pointer'
-                }}>View Profile</button>
-                <button style={{ 
+                <button onClick={() => setEditingStaff(member)} style={{ 
                   flex: 1, 
                   padding: '0.5rem', 
                   background: 'rgba(99, 102, 241, 0.1)', 
@@ -210,8 +222,20 @@ const StaffList = () => {
                   color: 'var(--primary-color)',
                   fontSize: '0.8rem',
                   fontWeight: '600',
-                  cursor: 'pointer'
-                }}>Send Message</button>
+                  cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem'
+                }}><Edit2 size={14} /> Edit</button>
+                <button onClick={() => handleDelete(member.id)} style={{ 
+                  flex: 1, 
+                  padding: '0.5rem', 
+                  background: 'rgba(239, 68, 68, 0.1)', 
+                  border: '1px solid var(--error)',
+                  borderRadius: 'var(--radius-md)',
+                  color: 'var(--error)',
+                  fontSize: '0.8rem',
+                  cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem'
+                }}><Trash2 size={14} /> Delete</button>
               </div>
             </div>
           ))}
@@ -293,6 +317,55 @@ const StaffList = () => {
         </div>
       )}
     </div>
+
+      {editingStaff && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
+          background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
+        }}>
+          <div className="glass-card" style={{ width: '100%', maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto', padding: '2rem', position: 'relative' }}>
+            <button onClick={() => setEditingStaff(null)} style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'transparent', border: 'none', color: 'white', cursor: 'pointer' }}>
+              <X size={24} />
+            </button>
+            <h2 style={{ marginBottom: '1.5rem' }}>Edit Staff Member</h2>
+            <form onSubmit={handleEditStaff} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div style={{ gridColumn: '1 / -1' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Full Name</label>
+                <input required type="text" value={editingStaff.name} onChange={e => setEditingStaff({...editingStaff, name: e.target.value})} style={{ width: '100%', padding: '0.75rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'white' }} />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Role</label>
+                <select value={editingStaff.role} onChange={e => setEditingStaff({...editingStaff, role: e.target.value})} style={{ width: '100%', padding: '0.75rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'white' }}>
+                  <option value="Teacher">Teacher</option>
+                  <option value="Principal">Principal</option>
+                  <option value="Admin">Admin</option>
+                  <option value="Accountant">Accountant</option>
+                </select>
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Subject/Department</label>
+                <input type="text" value={editingStaff.subject || ''} onChange={e => setEditingStaff({...editingStaff, subject: e.target.value})} style={{ width: '100%', padding: '0.75rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'white' }} />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Email</label>
+                <input required type="email" value={editingStaff.email} onChange={e => setEditingStaff({...editingStaff, email: e.target.value})} style={{ width: '100%', padding: '0.75rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'white' }} />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Phone Number</label>
+                <input type="text" value={editingStaff.phone || ''} onChange={e => setEditingStaff({...editingStaff, phone: e.target.value})} style={{ width: '100%', padding: '0.75rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'white' }} />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Assigned Class</label>
+                <input type="text" value={editingStaff.assignedClass || ''} onChange={e => setEditingStaff({...editingStaff, assignedClass: e.target.value})} style={{ width: '100%', padding: '0.75rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'white' }} />
+              </div>
+              <div style={{ gridColumn: '1 / -1' }}>
+                <button type="submit" className="btn-primary" style={{ width: '100%', justifyContent: 'center' }}>Update Staff Member</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
   );
 };
 
