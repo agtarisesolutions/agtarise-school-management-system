@@ -316,7 +316,6 @@ const StaffList = () => {
           </div>
         </div>
       )}
-    </div>
 
       {editingStaff && (
         <div style={{
@@ -366,6 +365,7 @@ const StaffList = () => {
           </div>
         </div>
       )}
+    </div>
   );
 };
 
