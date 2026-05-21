@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Download, BarChart2, TrendingUp, Calendar } from 'lucide-react';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../../firebase';
 
@@ -11,7 +11,7 @@ const Reports = () => {
   const generatePDF = (title, data, columns) => {
     const doc = new jsPDF();
     doc.text(title, 14, 15);
-    doc.autoTable({
+    autoTable(doc, {
       head: [columns],
       body: data,
       startY: 20,

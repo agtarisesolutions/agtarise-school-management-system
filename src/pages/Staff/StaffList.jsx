@@ -96,7 +96,8 @@ const StaffList = () => {
         email: editingStaff.email,
         phone: editingStaff.phone,
         assignedClass: editingStaff.assignedClass || '',
-        maritalStatus: editingStaff.maritalStatus || '',
+        dob: editingStaff.dob || '',
+        maritalStatus: editingStaff.maritalStatus || 'Single',
         address: editingStaff.address || '',
       });
       setEditingStaff(null);
@@ -357,6 +358,22 @@ const StaffList = () => {
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Assigned Class</label>
                 <input type="text" value={editingStaff.assignedClass || ''} onChange={e => setEditingStaff({...editingStaff, assignedClass: e.target.value})} style={{ width: '100%', padding: '0.75rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'white' }} />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Date of Birth</label>
+                <input type="date" value={editingStaff.dob || ''} onChange={e => setEditingStaff({...editingStaff, dob: e.target.value})} style={{ width: '100%', padding: '0.75rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'white' }} />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Marital Status</label>
+                <select value={editingStaff.maritalStatus || 'Single'} onChange={e => setEditingStaff({...editingStaff, maritalStatus: e.target.value})} style={{ width: '100%', padding: '0.75rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'white' }}>
+                  <option value="Single">Single</option>
+                  <option value="Married">Married</option>
+                  <option value="Divorced">Divorced</option>
+                </select>
+              </div>
+              <div style={{ gridColumn: '1 / -1' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Address</label>
+                <textarea value={editingStaff.address || ''} onChange={e => setEditingStaff({...editingStaff, address: e.target.value})} style={{ width: '100%', padding: '0.75rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'white', resize: 'vertical', minHeight: '80px' }}></textarea>
               </div>
               <div style={{ gridColumn: '1 / -1' }}>
                 <button type="submit" className="btn-primary" style={{ width: '100%', justifyContent: 'center' }}>Update Staff Member</button>

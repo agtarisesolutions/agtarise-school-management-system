@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { Search, FileText, Download, Award, ChevronRight, AlertCircle } from 'lucide-react';
-import { collection, query, where, getDocs } from 'firebase/firestore';
-import { db } from '../../firebase';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
+import { collection, query, where, getDocs, updateDoc } from 'firebase/firestore';
+import { db } from '../../firebase';
 
 const ResultChecker = () => {
   const { user } = useAuth();
@@ -15,6 +15,9 @@ const ResultChecker = () => {
   
   const [studentDetails, setStudentDetails] = useState(null);
   const [resultData, setResultData] = useState([]);
+  const [remarkText, setRemarkText] = useState('');
+  const [isEditingRemark, setIsEditingRemark] = useState(false);
+  const [studentDocRef, setStudentDocRef] = useState(null);
 
   useEffect(() => {
     if ((user?.role === 'parent' || user?.role === 'student') && user?.linkedStudentId) {
@@ -44,7 +47,10 @@ const ResultChecker = () => {
         return;
       }
       
-      const studentInfo = studentSnap.docs[0].data();
+      const studentDoc = studentSnap.docs[0];
+      const studentInfo = studentDoc.data();
+      setStudentDocRef(studentDoc.ref);
+      setRemarkText(studentInfo.remark || "Result represents academic performance for the current session. Please ensure fees are fully paid to avoid disruption in the next term.");
       setStudentDetails({
         name: studentInfo.name,
         class: studentInfo.class,
@@ -100,13 +106,29 @@ const ResultChecker = () => {
     doc.text(`Term: ${studentDetails.term}`, 14, 32);
     
     const tableData = resultData.map(s => [s.name, s.ca, s.exam, s.total, s.grade, s.remark]);
-    doc.autoTable({
+    autoTable(doc, {
       head: [['Subject', 'C.A (40)', 'Exam (60)', 'Total (100)', 'Grade', 'Remark']],
       body: tableData,
       startY: 40,
     });
     
+    doc.text(`Principal's Remark:`, 14, doc.lastAutoTable.finalY + 15);
+    const splitRemark = doc.splitTextToSize(remarkText, 180);
+    doc.text(splitRemark, 14, doc.lastAutoTable.finalY + 22);
+
     doc.save(`${studentDetails.name}_result.pdf`);
+  };
+
+  const handleSaveRemark = async () => {
+    if (!studentDocRef) return;
+    try {
+      await updateDoc(studentDocRef, { remark: remarkText });
+      setIsEditingRemark(false);
+      alert('Remark updated successfully!');
+    } catch (err) {
+      console.error(err);
+      alert('Failed to update remark.');
+    }
   };
 
   return (
@@ -210,10 +232,27 @@ const ResultChecker = () => {
           </div>
 
           <div style={{ marginTop: '2rem', padding: '1.5rem', background: 'rgba(99, 102, 241, 0.05)', borderRadius: 'var(--radius-md)', border: '1px dashed var(--primary-color)' }}>
-            <h4 style={{ marginBottom: '0.5rem' }}>Principal's Remark</h4>
-            <p style={{ fontStyle: 'italic', color: 'var(--text-muted)' }}>
-              "Result represents academic performance for the current session. Please ensure fees are fully paid to avoid disruption in the next term."
-            </p>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+              <h4>Principal's Remark</h4>
+              {user?.role !== 'parent' && user?.role !== 'student' && (
+                <button 
+                  onClick={() => isEditingRemark ? handleSaveRemark() : setIsEditingRemark(true)} 
+                  className={isEditingRemark ? "btn-primary" : "btn-secondary"} 
+                  style={{ padding: '0.3rem 0.8rem', fontSize: '0.8rem' }}
+                >
+                  {isEditingRemark ? 'Save Remark' : 'Edit Remark'}
+                </button>
+              )}
+            </div>
+            {isEditingRemark ? (
+              <textarea 
+                value={remarkText} 
+                onChange={e => setRemarkText(e.target.value)} 
+                style={{ width: '100%', padding: '0.75rem', background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'white', minHeight: '80px', resize: 'vertical' }}
+              />
+            ) : (
+              <p style={{ fontStyle: 'italic', color: 'var(--text-muted)' }}>"{remarkText}"</p>
+            )}
           </div>
           
           <button onClick={() => { setShowResult(false); setStuId(''); setResultData([]); setStudentDetails(null); }} style={{ marginTop: '2rem', background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
