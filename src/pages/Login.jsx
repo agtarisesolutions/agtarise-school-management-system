@@ -16,31 +16,47 @@ const Login = () => {
   const [linkedStudentId, setLinkedStudentId] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login, signup } = useAuth();
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
+  const [successMsg, setSuccessMsg] = useState('');
+  const { login, signup, user, resetPassword } = useAuth();
   const navigate = useNavigate();
+
+  React.useEffect(() => {
+    if (user) {
+      navigate('/dashboard');
+    }
+  }, [user, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setSuccessMsg('');
     setLoading(true);
 
     try {
-      if (isRegistering) {
+      if (isResettingPassword) {
+        await resetPassword(email.trim());
+        setSuccessMsg('Password reset link sent to your email.');
+        setIsResettingPassword(false);
+        setLoading(false);
+      } else if (isRegistering) {
         const userData = { role, name, schoolName };
         if (role === 'teacher') {
           userData.assignedClass = assignedClass;
         } else if (role === 'parent' || role === 'student') {
           userData.linkedStudentId = linkedStudentId;
         }
-        await signup(email, password, userData);
+        await signup(email.trim(), password, userData);
       } else {
-        await login(email, password);
+        await login(email.trim(), password);
       }
-      navigate('/dashboard');
     } catch (err) {
-      setError(isRegistering ? 'Registration failed. Email might be in use.' : 'Invalid credentials. Please check your email and password.');
+      if (isResettingPassword) {
+        setError('Failed to send reset link. Please verify your email.');
+      } else {
+        setError(isRegistering ? 'Registration failed. Email might be in use.' : 'Invalid credentials. Please check your email and password.');
+      }
       console.error(err);
-    } finally {
       setLoading(false);
     }
   };
@@ -65,13 +81,16 @@ const Login = () => {
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
           <img src={logoImg} alt="Agtarise Solutions Logo" style={{ width: '120px', height: 'auto', marginBottom: '1rem' }} />
           <h2 style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>Agtarise <span className="text-gradient">SMS</span></h2>
-          <p style={{ color: 'var(--text-muted)' }}>{isRegistering ? 'Create your school account' : 'Sign in to manage your school excellence'}</p>
+          <p style={{ color: 'var(--text-muted)' }}>
+            {isResettingPassword ? 'Reset your password' : isRegistering ? 'Create your school account' : 'Sign in to manage your school excellence'}
+          </p>
         </div>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           {error && <div style={{ color: 'var(--error)', fontSize: '0.85rem', textAlign: 'center', background: 'rgba(239, 68, 68, 0.1)', padding: '0.5rem', borderRadius: '4px' }}>{error}</div>}
+          {successMsg && <div style={{ color: 'var(--success)', fontSize: '0.85rem', textAlign: 'center', background: 'rgba(16, 185, 129, 0.1)', padding: '0.5rem', borderRadius: '4px' }}>{successMsg}</div>}
           
-            {isRegistering && (
+            {isRegistering && !isResettingPassword && (
             <>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                 <label style={{ fontSize: '0.9rem', fontWeight: '500' }}>Full Name</label>
@@ -129,21 +148,45 @@ const Login = () => {
             </div>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <label style={{ fontSize: '0.9rem', fontWeight: '500' }}>Password</label>
-            <div style={{ position: 'relative' }}>
-              <Lock style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} size={18} />
-              <input type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} style={{ width: '100%', padding: '0.75rem 1rem 0.75rem 3rem', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'white', outline: 'none' }} required />
+          {!isResettingPassword && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <label style={{ fontSize: '0.9rem', fontWeight: '500' }}>Password</label>
+                {!isRegistering && (
+                  <span 
+                    onClick={() => { setIsResettingPassword(true); setError(''); setSuccessMsg(''); }} 
+                    style={{ fontSize: '0.8rem', color: 'var(--primary-color)', cursor: 'pointer', fontWeight: '500' }}
+                  >
+                    Forgot Password?
+                  </span>
+                )}
+              </div>
+              <div style={{ position: 'relative' }}>
+                <Lock style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} size={18} />
+                <input type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} style={{ width: '100%', padding: '0.75rem 1rem 0.75rem 3rem', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'white', outline: 'none' }} required />
+              </div>
             </div>
-          </div>
+          )}
 
           <button type="submit" className="btn-primary" style={{ justifyContent: 'center', width: '100%', marginTop: '1rem' }} disabled={loading}>
-            <LogIn size={20} /> {isRegistering ? 'Register Account' : 'Sign In'}
+            <LogIn size={20} /> {isResettingPassword ? 'Send Reset Link' : isRegistering ? 'Register Account' : 'Sign In'}
           </button>
         </form>
 
         <div style={{ marginTop: '2rem', textAlign: 'center', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-          {isRegistering ? "Already have an account?" : "Don't have an account?"} <span onClick={() => setIsRegistering(!isRegistering)} style={{ color: 'var(--primary-color)', cursor: 'pointer', fontWeight: '600' }}>{isRegistering ? 'Sign In' : 'Register School'}</span>
+          {isResettingPassword ? (
+            <>
+              Remember your password? <span onClick={() => { setIsResettingPassword(false); setError(''); }} style={{ color: 'var(--primary-color)', cursor: 'pointer', fontWeight: '600' }}>Sign In</span>
+            </>
+          ) : isRegistering ? (
+            <>
+              Already have an account? <span onClick={() => { setIsRegistering(false); setError(''); }} style={{ color: 'var(--primary-color)', cursor: 'pointer', fontWeight: '600' }}>Sign In</span>
+            </>
+          ) : (
+            <>
+              Don't have an account? <span onClick={() => { setIsRegistering(true); setError(''); }} style={{ color: 'var(--primary-color)', cursor: 'pointer', fontWeight: '600' }}>Register School</span>
+            </>
+          )}
         </div>
       </motion.div>
     </div>

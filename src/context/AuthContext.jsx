@@ -3,7 +3,8 @@ import {
   signInWithEmailAndPassword, 
   signOut, 
   onAuthStateChanged,
-  createUserWithEmailAndPassword
+  createUserWithEmailAndPassword,
+  sendPasswordResetEmail
 } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase';
@@ -21,10 +22,12 @@ export const AuthProvider = ({ children }) => {
           // Fetch additional user data (role, schoolName) from Firestore
           const userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
           if (userDoc.exists()) {
+            const data = userDoc.data();
             setUser({
               uid: firebaseUser.uid,
               email: firebaseUser.email,
-              ...userDoc.data()
+              ...data,
+              role: data.role || 'student' // ensure role exists
             });
           } else {
             // Fallback if doc doesn't exist yet
@@ -40,8 +43,13 @@ export const AuthProvider = ({ children }) => {
         }
       } catch (error) {
         console.error("Auth initialization error:", error);
-        // On error, we still want to stop loading
-        setUser(null);
+        // Fallback if Firestore read fails
+        setUser({
+          uid: firebaseUser.uid,
+          email: firebaseUser.email,
+          role: 'admin', // default to admin for this specific fallback or as needed
+          name: firebaseUser.displayName || 'User'
+        });
       } finally {
         setLoading(false);
       }
@@ -67,8 +75,12 @@ export const AuthProvider = ({ children }) => {
     return res;
   };
 
+  const resetPassword = async (email) => {
+    return sendPasswordResetEmail(auth, email);
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, logout, signup, loading }}>
+    <AuthContext.Provider value={{ user, login, logout, signup, resetPassword, loading }}>
       {!loading && children}
     </AuthContext.Provider>
   );

@@ -22,7 +22,8 @@ const Settings = () => {
     timezone: 'Africa/Lagos',
     currency: 'NGN',
     dateFormat: 'DD/MM/YYYY',
-    academicYear: '2024/2025'
+    academicYear: '2024/2025',
+    themeColor: '#6366f1'
   });
 
   useEffect(() => {
@@ -46,6 +47,7 @@ const Settings = () => {
     setSaveSuccess('');
     try {
       await setDoc(doc(db, 'system', 'globalSettings'), settings);
+      document.documentElement.style.setProperty('--primary-color', settings.themeColor);
       setSaveSuccess('Settings successfully saved to database!');
       setTimeout(() => setSaveSuccess(''), 3000);
     } catch (error) {
@@ -203,6 +205,10 @@ const Settings = () => {
                   <button type="button" onClick={() => setTheme('dark')} style={{ padding: '0.4rem 0.8rem', background: theme === 'dark' ? 'var(--primary-color)' : 'transparent', borderRadius: 'var(--radius-full)', border: 'none', color: theme === 'dark' ? 'white' : 'var(--text-muted)', cursor: 'pointer' }}><Moon size={16} /></button>
                   <button type="button" onClick={() => setTheme('light')} style={{ padding: '0.4rem 0.8rem', background: theme === 'light' ? 'var(--primary-color)' : 'transparent', borderRadius: 'var(--radius-full)', border: 'none', color: theme === 'light' ? 'white' : 'var(--text-muted)', cursor: 'pointer' }}><Sun size={16} /></button>
                 </div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>School Color Theme</span>
+                <input type="color" name="themeColor" value={settings.themeColor} onChange={handleChange} style={{ width: '40px', height: '40px', padding: '0', border: 'none', borderRadius: 'var(--radius-full)', cursor: 'pointer', background: 'transparent' }} />
               </div>
               <button type="submit" disabled={loading} className="btn-primary">
                 <Save size={18} /> {loading ? 'Saving...' : 'Save Preferences'}
