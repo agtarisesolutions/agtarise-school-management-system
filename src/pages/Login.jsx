@@ -12,7 +12,7 @@ const Login = () => {
   const [role, setRole] = useState('admin');
   const [name, setName] = useState('');
   const [schoolName, setSchoolName] = useState('');
-  const [assignedClass, setAssignedClass] = useState('SS3 A');
+  const [assignedClass, setAssignedClass] = useState('NONE');
   const [linkedStudentId, setLinkedStudentId] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -61,7 +61,7 @@ const Login = () => {
     }
   };
 
-  const classes = ['JSS 1 A', 'JSS 2 B', 'SS1 C', 'SS2 A', 'SS3 A'];
+  const classes = ['NONE', 'JSS 1 A', 'JSS 2 B', 'SS1 C', 'SS2 A', 'SS3 A'];
 
   return (
     <div style={{ 

@@ -14,10 +14,10 @@ const Subjects = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterLevel, setFilterLevel] = useState('All');
   const [newSubject, setNewSubject] = useState({
-    name: '', code: '', level: 'General', classes: '', description: ''
+    name: '', code: '', level: 'Junior Secondary', classes: '', description: ''
   });
 
-  const levels = ['All', 'General', 'Science', 'Arts', 'Commercial', 'Basic', 'Nursery'];
+  const levels = ['All', 'Nursery', 'Primary', 'Junior Secondary', 'Senior Secondary (Science)', 'Senior Secondary (Commercial)', 'Senior Secondary (Art)'];
 
   const fetchSubjects = async () => {
     setLoading(true);
@@ -48,7 +48,7 @@ const Subjects = () => {
         createdAt: new Date().toISOString()
       });
       setShowAddModal(false);
-      setNewSubject({ name: '', code: '', level: 'General', classes: '', description: '' });
+      setNewSubject({ name: '', code: '', level: 'Junior Secondary', classes: '', description: '' });
       fetchSubjects();
     } catch (error) {
       console.error("Error adding subject: ", error);

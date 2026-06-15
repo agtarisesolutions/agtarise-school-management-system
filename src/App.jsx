@@ -30,6 +30,11 @@ import ResultChecker from './pages/Results/ResultChecker';
 import PromoteStudents from './pages/Academics/PromoteStudents';
 import Timetable from './pages/Timetable/Timetable';
 
+// New pages
+import StaffAttendance from './pages/Attendance/StaffAttendance';
+import Receipts from './pages/Finance/Receipts';
+import AcademicCalendar from './pages/Academics/AcademicCalendar';
+
 const App = () => {
   return (
     <AuthProvider>
@@ -67,6 +72,9 @@ const App = () => {
 
           {/* Attendance, Reports, Inventory & Settings Modules */}
           <Route path="/attendance" element={<ProtectedRoute allowedRoles={['admin', 'teacher', 'student', 'parent']}><MainLayout><Attendance /></MainLayout></ProtectedRoute>} />
+          <Route path="/staff-attendance" element={<ProtectedRoute allowedRoles={['admin', 'teacher']}><MainLayout><StaffAttendance /></MainLayout></ProtectedRoute>} />
+          <Route path="/receipts" element={<ProtectedRoute allowedRoles={['admin']}><MainLayout><Receipts /></MainLayout></ProtectedRoute>} />
+          <Route path="/academic-calendar" element={<ProtectedRoute allowedRoles={['admin', 'teacher', 'student', 'parent']}><MainLayout><AcademicCalendar /></MainLayout></ProtectedRoute>} />
           <Route path="/reports" element={<ProtectedRoute allowedRoles={['admin']}><MainLayout><Reports /></MainLayout></ProtectedRoute>} />
           <Route path="/inventory" element={<ProtectedRoute allowedRoles={['admin']}><MainLayout><Inventory /></MainLayout></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute allowedRoles={['admin']}><MainLayout><Settings /></MainLayout></ProtectedRoute>} />

@@ -13,7 +13,7 @@ const StaffList = () => {
   const [newStaff, setNewStaff] = useState({
     name: '', role: 'Teacher', subject: '', email: '', phone: '',
     dob: '', maritalStatus: 'Single', address: '', nationality: 'Nigerian',
-    assignedClass: 'SS3 A',
+    assignedClass: 'NONE',
     nextOfKinName: '', nextOfKinPhone: '', nextOfKinAddress: ''
   });
 
@@ -65,7 +65,7 @@ const StaffList = () => {
       setNewStaff({
         name: '', role: 'Teacher', subject: '', email: '', phone: '',
         dob: '', maritalStatus: 'Single', address: '', nationality: 'Nigerian',
-        assignedClass: 'SS3 A',
+        assignedClass: 'NONE',
         nextOfKinName: '', nextOfKinPhone: '', nextOfKinAddress: ''
       });
       fetchStaff();
@@ -119,7 +119,7 @@ const StaffList = () => {
     doc.save('staff_directory.pdf');
   };
 
-  const classes = ['JSS 1 A', 'JSS 2 B', 'SS1 C', 'SS2 A', 'SS3 A'];
+  const classes = ['NONE', 'JSS 1 A', 'JSS 2 B', 'SS1 C', 'SS2 A', 'SS3 A'];
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>

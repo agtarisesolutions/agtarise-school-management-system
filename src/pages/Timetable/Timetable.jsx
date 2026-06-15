@@ -9,13 +9,15 @@ import 'jspdf-autotable';
 const Timetable = () => {
   const { user } = useAuth();
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+  const classes = ['JSS 1 A', 'JSS 2 B', 'SS1 C', 'SS2 A', 'SS3 A'];
   const [selectedDay, setSelectedDay] = useState('Monday');
+  const [selectedClass, setSelectedClass] = useState('JSS 1 A');
   const [periods, setPeriods] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingPeriod, setEditingPeriod] = useState(null);
   const [newPeriod, setNewPeriod] = useState({
-    timeStart: '', timeEnd: '', subject: '', teacher: '', day: 'Monday'
+    timeStart: '', timeEnd: '', subject: '', teacher: '', day: 'Monday', classAssigned: 'JSS 1 A'
   });
 
   const fetchPeriods = async () => {
@@ -48,10 +50,11 @@ const Timetable = () => {
         time: formattedTime,
         subject: newPeriod.subject,
         teacher: newPeriod.teacher,
+        classAssigned: newPeriod.classAssigned,
         timeStartSort: newPeriod.timeStart // For sorting if needed
       });
       setShowAddModal(false);
-      setNewPeriod({ timeStart: '', timeEnd: '', subject: '', teacher: '', day: selectedDay });
+      setNewPeriod({ timeStart: '', timeEnd: '', subject: '', teacher: '', day: selectedDay, classAssigned: selectedClass });
       fetchPeriods();
     } catch (error) {
       console.error("Error adding period: ", error);
@@ -78,6 +81,7 @@ const Timetable = () => {
         time: editingPeriod.time,
         subject: editingPeriod.subject,
         teacher: editingPeriod.teacher,
+        classAssigned: editingPeriod.classAssigned || 'JSS 1 A',
         timeStartSort: ts?.trim() || ''
       });
       setEditingPeriod(null);
@@ -100,7 +104,7 @@ const Timetable = () => {
   };
 
   const displayPeriods = periods
-    .filter(p => p.day === selectedDay)
+    .filter(p => p.day === selectedDay && (p.classAssigned === selectedClass || !p.classAssigned))
     .sort((a, b) => a.timeStartSort?.localeCompare(b.timeStartSort));
 
   return (
@@ -122,23 +126,44 @@ const Timetable = () => {
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: '1rem', overflowX: 'auto', paddingBottom: '1rem' }}>
-        {days.map(day => (
-          <button 
-            key={day} 
-            onClick={() => setSelectedDay(day)}
-            style={{ 
-              padding: '0.6rem 1.5rem', 
-              background: day === selectedDay ? 'var(--primary-color)' : 'var(--glass-bg)', 
-              border: '1px solid var(--glass-border)',
-              borderRadius: 'var(--radius-full)',
-              color: 'white',
-              cursor: 'pointer',
-              whiteSpace: 'nowrap'
-            }}>
-            {day}
-          </button>
-        ))}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <div style={{ display: 'flex', gap: '1rem', overflowX: 'auto', paddingBottom: '0.5rem' }}>
+          {classes.map(cls => (
+            <button 
+              key={cls} 
+              onClick={() => setSelectedClass(cls)}
+              style={{ 
+                padding: '0.6rem 1.5rem', 
+                background: cls === selectedClass ? 'var(--accent-color)' : 'var(--glass-bg)', 
+                border: '1px solid var(--glass-border)',
+                borderRadius: 'var(--radius-full)',
+                color: 'white',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+                fontWeight: cls === selectedClass ? 'bold' : 'normal'
+              }}>
+              {cls}
+            </button>
+          ))}
+        </div>
+        <div style={{ display: 'flex', gap: '1rem', overflowX: 'auto', paddingBottom: '1rem' }}>
+          {days.map(day => (
+            <button 
+              key={day} 
+              onClick={() => setSelectedDay(day)}
+              style={{ 
+                padding: '0.6rem 1.5rem', 
+                background: day === selectedDay ? 'var(--primary-color)' : 'var(--glass-bg)', 
+                border: '1px solid var(--glass-border)',
+                borderRadius: 'var(--radius-full)',
+                color: 'white',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap'
+              }}>
+              {day}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="glass-card" style={{ padding: '1.5rem' }}>
@@ -207,11 +232,19 @@ const Timetable = () => {
             </button>
             <h2 style={{ marginBottom: '1.5rem' }}>Add Period</h2>
             <form onSubmit={handleAddPeriod} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Day</label>
-                <select value={newPeriod.day} onChange={e => setNewPeriod({...newPeriod, day: e.target.value})} style={{ width: '100%', padding: '0.75rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'white' }}>
-                  {days.map(d => <option key={d} value={d}>{d}</option>)}
-                </select>
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Day</label>
+                  <select value={newPeriod.day} onChange={e => setNewPeriod({...newPeriod, day: e.target.value})} style={{ width: '100%', padding: '0.75rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'white' }}>
+                    {days.map(d => <option key={d} value={d}>{d}</option>)}
+                  </select>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Class</label>
+                  <select value={newPeriod.classAssigned} onChange={e => setNewPeriod({...newPeriod, classAssigned: e.target.value})} style={{ width: '100%', padding: '0.75rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'white' }}>
+                    {classes.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
               </div>
 
               <div style={{ display: 'flex', gap: '1rem' }}>
@@ -253,11 +286,19 @@ const Timetable = () => {
             </button>
             <h2 style={{ marginBottom: '1.5rem' }}>Edit Period</h2>
             <form onSubmit={handleEditPeriod} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Day</label>
-                <select value={editingPeriod.day} onChange={e => setEditingPeriod({...editingPeriod, day: e.target.value})} style={{ width: '100%', padding: '0.75rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'white' }}>
-                  {['Monday','Tuesday','Wednesday','Thursday','Friday'].map(d => <option key={d} value={d}>{d}</option>)}
-                </select>
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Day</label>
+                  <select value={editingPeriod.day} onChange={e => setEditingPeriod({...editingPeriod, day: e.target.value})} style={{ width: '100%', padding: '0.75rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'white' }}>
+                    {['Monday','Tuesday','Wednesday','Thursday','Friday'].map(d => <option key={d} value={d}>{d}</option>)}
+                  </select>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Class</label>
+                  <select value={editingPeriod.classAssigned || 'JSS 1 A'} onChange={e => setEditingPeriod({...editingPeriod, classAssigned: e.target.value})} style={{ width: '100%', padding: '0.75rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-md)', color: 'white' }}>
+                    {classes.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
               </div>
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Time (e.g. 08:00 - 09:00)</label>

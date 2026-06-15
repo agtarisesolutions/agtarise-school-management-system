@@ -14,7 +14,10 @@ import {
   Wallet,
   Award,
   Book,
-  CalendarDays
+  CalendarDays,
+  UserCheck,
+  Receipt,
+  CalendarRange
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import logoImg from '../assets/logo.png';
@@ -34,8 +37,11 @@ const Sidebar = () => {
     { icon: <Award size={20} />, label: 'Results', path: '/results', roles: ['admin', 'teacher', 'student', 'parent'] },
     { icon: <Package size={20} />, label: 'Inventory', path: '/inventory', roles: ['admin'] },
     { icon: <Calendar size={20} />, label: 'Attendance', path: '/attendance', roles: ['admin', 'teacher', 'student', 'parent'] },
+    { icon: <UserCheck size={20} />, label: 'Staff Attendance', path: '/staff-attendance', roles: ['admin', 'teacher'] },
     { icon: <CreditCard size={20} />, label: 'Finance', path: '/finance', roles: ['admin', 'parent'] },
+    { icon: <Receipt size={20} />, label: 'Receipts', path: '/receipts', roles: ['admin'] },
     { icon: <Wallet size={20} />, label: 'Payroll', path: '/payroll', roles: ['admin'] },
+    { icon: <CalendarRange size={20} />, label: 'Academic Calendar', path: '/academic-calendar', roles: ['admin', 'teacher', 'student', 'parent'] },
     { icon: <BarChart3 size={20} />, label: 'Reports', path: '/reports', roles: ['admin'] },
     { icon: <Settings size={20} />, label: 'Settings', path: '/settings', roles: ['admin'] },
   ];
