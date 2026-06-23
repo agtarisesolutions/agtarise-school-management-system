@@ -42,11 +42,13 @@ const Fees = () => {
         status: newTx.status,
         date: new Date().toISOString().split('T')[0]
       });
+      alert('✅ Payment recorded successfully!');
       setShowCollectModal(false);
       setNewTx({ student: '', amount: '', type: 'Tuition Fee', status: 'Paid', studentId: '' });
       fetchTransactions();
     } catch (error) {
       console.error("Error adding transaction: ", error);
+      alert('❌ Failed to record payment: ' + error.message + '\n\nIf you see "Missing or insufficient permissions", please update your Firestore Security Rules.');
     }
   };
 
@@ -57,6 +59,7 @@ const Fees = () => {
         fetchTransactions();
       } catch (error) {
         console.error("Error deleting fee record: ", error);
+        alert('❌ Failed to delete record: ' + error.message);
       }
     }
   };

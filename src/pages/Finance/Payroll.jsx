@@ -45,10 +45,14 @@ const Payroll = () => {
         status: newPayroll.status,
         month: new Date().toLocaleString('default', { month: 'long', year: 'numeric' })
       });
+      alert('✅ Payroll record created successfully!');
       setShowAddModal(false);
       setNewPayroll({ staffName: '', role: 'Teacher', basicSalary: '', allowance: '', deduction: '', status: 'Pending' });
       fetchPayroll();
-    } catch (e) { console.error(e); }
+    } catch (e) {
+      console.error(e);
+      alert('❌ Failed to save payroll record: ' + e.message);
+    }
   };
 
   const handleEditPayroll = async (e) => {
@@ -68,15 +72,24 @@ const Payroll = () => {
         netPay: net,
         status: editingPayroll.status,
       });
+      alert('✅ Payroll record updated successfully!');
       setEditingPayroll(null);
       fetchPayroll();
-    } catch (e) { console.error(e); }
+    } catch (e) {
+      console.error(e);
+      alert('❌ Failed to update payroll record: ' + e.message);
+    }
   };
 
   const handleDelete = async (id) => {
     if (window.confirm('Delete this payroll record?')) {
-      try { await deleteDoc(doc(db, 'payroll', id)); fetchPayroll(); }
-      catch (e) { console.error(e); }
+      try { 
+        await deleteDoc(doc(db, 'payroll', id)); 
+        fetchPayroll(); 
+      } catch (e) { 
+        console.error(e); 
+        alert('❌ Failed to delete payroll record: ' + e.message);
+      }
     }
   };
 

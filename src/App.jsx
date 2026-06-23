@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import { ToastProvider } from './components/Toast';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import MainLayout from './components/MainLayout';
@@ -37,6 +38,7 @@ import AcademicCalendar from './pages/Academics/AcademicCalendar';
 
 const App = () => {
   return (
+    <ToastProvider>
     <AuthProvider>
       <Router>
         <Routes>
@@ -84,6 +86,7 @@ const App = () => {
         </Routes>
       </Router>
     </AuthProvider>
+    </ToastProvider>
   );
 };
 

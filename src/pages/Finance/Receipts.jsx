@@ -74,18 +74,25 @@ const Receipts = () => {
         ...formData, total, receiptNumber: receiptNum,
         createdAt: new Date().toISOString(),
       });
+      alert('✅ Receipt issued and saved successfully!');
       setShowModal(false);
       setFormData(DEFAULT_FORM);
       fetchData();
     } catch (err) {
       console.error('Error saving receipt:', err);
+      alert('❌ Failed to save receipt: ' + err.message);
     }
   };
 
   const handleDelete = async (id) => {
     if (window.confirm('Delete this receipt?')) {
-      await deleteDoc(doc(db, 'receipts', id));
-      fetchData();
+      try {
+        await deleteDoc(doc(db, 'receipts', id));
+        fetchData();
+      } catch (err) {
+        console.error('Error deleting receipt:', err);
+        alert('❌ Failed to delete receipt: ' + err.message);
+      }
     }
   };
 

@@ -48,7 +48,10 @@ const StaffAttendance = () => {
       await setDoc(doc(db, 'staff_attendance', logDocId), {
         date: selectedDate, logs: newLogs, updatedAt: new Date().toISOString()
       }, { merge: true });
-    } catch (err) { console.error('Error updating staff attendance:', err); }
+    } catch (err) { 
+      console.error('Error updating staff attendance:', err); 
+      alert('❌ Failed to update staff attendance: ' + err.message);
+    }
   };
 
   const toggleStatus = async (staffId) => {
@@ -65,7 +68,10 @@ const StaffAttendance = () => {
       await setDoc(doc(db, 'staff_attendance', logDocId), {
         date: selectedDate, logs: newLogs, updatedAt: new Date().toISOString()
       }, { merge: true });
-    } catch (err) { console.error('Error toggling status:', err); }
+    } catch (err) { 
+      console.error('Error toggling status:', err); 
+      alert('❌ Failed to toggle staff attendance: ' + err.message);
+    }
   };
 
   const generatePDF = () => {

@@ -53,11 +53,13 @@ const Timetable = () => {
         classAssigned: newPeriod.classAssigned,
         timeStartSort: newPeriod.timeStart // For sorting if needed
       });
+      alert('✅ Period added successfully!');
       setShowAddModal(false);
       setNewPeriod({ timeStart: '', timeEnd: '', subject: '', teacher: '', day: selectedDay, classAssigned: selectedClass });
       fetchPeriods();
     } catch (error) {
       console.error("Error adding period: ", error);
+      alert('❌ Failed to add period: ' + error.message + '\n\nIf you see "Missing or insufficient permissions", update your Firestore Security Rules.');
     }
   };
 
@@ -68,6 +70,7 @@ const Timetable = () => {
         fetchPeriods();
       } catch (error) {
         console.error("Error deleting period: ", error);
+        alert('❌ Failed to delete period: ' + error.message);
       }
     }
   };
@@ -84,10 +87,12 @@ const Timetable = () => {
         classAssigned: editingPeriod.classAssigned || 'JSS 1 A',
         timeStartSort: ts?.trim() || ''
       });
+      alert('✅ Period updated successfully!');
       setEditingPeriod(null);
       fetchPeriods();
     } catch (error) {
       console.error("Error updating period: ", error);
+      alert('❌ Failed to update period: ' + error.message);
     }
   };
 

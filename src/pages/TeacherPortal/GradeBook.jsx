@@ -148,10 +148,12 @@ const GradeBook = () => {
       });
 
       await Promise.all(savePromises);
+      alert('✅ All grades saved successfully!');
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
     } catch (err) {
       console.error("Error saving grades:", err);
+      alert('❌ Failed to save grades: ' + err.message);
     } finally {
       setSaving(false);
     }

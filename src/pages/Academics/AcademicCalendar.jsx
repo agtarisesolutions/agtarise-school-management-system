@@ -56,11 +56,15 @@ const AcademicCalendar = () => {
       } else {
         await addDoc(collection(db, 'academic_calendar'), { ...formData, createdAt: new Date().toISOString() });
       }
+      alert('✅ Calendar event saved successfully!');
       setShowModal(false);
       setEditingEvent(null);
       setFormData(DEFAULT_EVENT);
       fetchEvents();
-    } catch (err) { console.error('Error saving event:', err); }
+    } catch (err) { 
+      console.error('Error saving event:', err); 
+      alert('❌ Failed to save calendar event: ' + err.message);
+    }
   };
 
   const handleEdit = (ev) => {
@@ -71,8 +75,13 @@ const AcademicCalendar = () => {
 
   const handleDelete = async (id) => {
     if (window.confirm('Delete this event?')) {
-      await deleteDoc(doc(db, 'academic_calendar', id));
-      fetchEvents();
+      try {
+        await deleteDoc(doc(db, 'academic_calendar', id));
+        fetchEvents();
+      } catch (err) {
+        console.error('Error deleting calendar event:', err);
+        alert('❌ Failed to delete calendar event: ' + err.message);
+      }
     }
   };
 

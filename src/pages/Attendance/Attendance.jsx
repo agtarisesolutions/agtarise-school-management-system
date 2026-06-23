@@ -115,8 +115,10 @@ const Attendance = () => {
         logs: newLogs,
         updatedAt: new Date().toISOString()
       }, { merge: true });
+      // Silent success is fine here since it's a fast toggle, but let's notify on error
     } catch (error) {
       console.error("Error updating attendance: ", error);
+      alert('❌ Failed to update attendance: ' + error.message + '\n\nPlease check your Firestore security rules.');
     }
   };
 
@@ -144,6 +146,7 @@ const Attendance = () => {
       }, { merge: true });
     } catch (error) {
       console.error("Error toggling status: ", error);
+      alert('❌ Failed to toggle attendance status: ' + error.message + '\n\nPlease check your Firestore security rules.');
     }
   };
 

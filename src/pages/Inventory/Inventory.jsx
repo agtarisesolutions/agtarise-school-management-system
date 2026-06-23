@@ -33,10 +33,14 @@ const Inventory = () => {
         price: parseFloat(newItem.price), staff: newItem.staff,
         createdAt: new Date().toISOString()
       });
+      alert('✅ Inventory item saved successfully!');
       setShowAddModal(false);
       setNewItem({ name: '', category: 'Stationery', quantity: '', price: '', staff: '' });
       fetchItems();
-    } catch (e) { console.error(e); }
+    } catch (e) {
+      console.error(e);
+      alert('❌ Failed to save inventory item: ' + e.message);
+    }
   };
 
   const handleEditItem = async (e) => {
@@ -47,15 +51,24 @@ const Inventory = () => {
         quantity: parseInt(editingItem.quantity), sold: parseInt(editingItem.sold) || 0,
         price: parseFloat(editingItem.price), staff: editingItem.staff,
       });
+      alert('✅ Inventory item updated successfully!');
       setEditingItem(null);
       fetchItems();
-    } catch (e) { console.error(e); }
+    } catch (e) {
+      console.error(e);
+      alert('❌ Failed to update inventory item: ' + e.message);
+    }
   };
 
   const handleDelete = async (id) => {
     if (window.confirm('Remove this item?')) {
-      try { await deleteDoc(doc(db, 'inventory', id)); fetchItems(); }
-      catch (e) { console.error(e); }
+      try { 
+        await deleteDoc(doc(db, 'inventory', id)); 
+        fetchItems(); 
+      } catch (e) { 
+        console.error(e); 
+        alert('❌ Failed to delete inventory item: ' + e.message);
+      }
     }
   };
 

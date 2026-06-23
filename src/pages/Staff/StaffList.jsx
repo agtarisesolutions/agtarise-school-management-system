@@ -61,6 +61,7 @@ const StaffList = () => {
       };
 
       await addDoc(collection(db, "staff"), staffDataToSave);
+      alert('✅ Staff member saved successfully!');
       setShowAddModal(false);
       setNewStaff({
         name: '', role: 'Teacher', subject: '', email: '', phone: '',
@@ -71,6 +72,7 @@ const StaffList = () => {
       fetchStaff();
     } catch (error) {
       console.error("Error adding staff: ", error);
+      alert('❌ Failed to save staff: ' + error.message + '\n\nIf you see "Missing or insufficient permissions", please update your Firestore Security Rules in the Firebase Console.');
     }
   };
 
@@ -81,6 +83,7 @@ const StaffList = () => {
         fetchStaff();
       } catch (error) {
         console.error("Error deleting staff: ", error);
+        alert('❌ Failed to delete staff: ' + error.message);
       }
     }
   };
@@ -100,10 +103,12 @@ const StaffList = () => {
         maritalStatus: editingStaff.maritalStatus || 'Single',
         address: editingStaff.address || '',
       });
+      alert('✅ Staff member updated successfully!');
       setEditingStaff(null);
       fetchStaff();
     } catch (error) {
       console.error("Error updating staff: ", error);
+      alert('❌ Failed to update staff: ' + error.message);
     }
   };
 

@@ -44,11 +44,13 @@ const Classes = () => {
         ...newClass,
         students: 0 // New classes start with 0 students
       });
+      alert('✅ Class saved successfully!');
       setShowAddModal(false);
       setNewClass({ name: '', level: 'Secondary', teacher: '' });
       fetchClasses();
     } catch (error) {
       console.error("Error adding class: ", error);
+      alert('❌ Failed to save class: ' + error.message + '\n\nIf you see "Missing or insufficient permissions", please update your Firestore Security Rules in the Firebase Console.');
     }
   };
 
@@ -62,10 +64,12 @@ const Classes = () => {
         teacher: editingClass.teacher,
         students: Number(editingClass.students) || 0
       });
+      alert('✅ Class updated successfully!');
       setEditingClass(null);
       fetchClasses();
     } catch (error) {
       console.error("Error updating class: ", error);
+      alert('❌ Failed to update class: ' + error.message);
     }
   };
 
@@ -76,6 +80,7 @@ const Classes = () => {
         fetchClasses();
       } catch (error) {
         console.error("Error deleting class: ", error);
+        alert('❌ Failed to delete class: ' + error.message);
       }
     }
   };

@@ -47,11 +47,13 @@ const Subjects = () => {
         ...newSubject,
         createdAt: new Date().toISOString()
       });
+      alert('✅ Subject saved successfully!');
       setShowAddModal(false);
       setNewSubject({ name: '', code: '', level: 'Junior Secondary', classes: '', description: '' });
       fetchSubjects();
     } catch (error) {
       console.error("Error adding subject: ", error);
+      alert('❌ Failed to save subject: ' + error.message + '\n\nPlease update your Firestore Security Rules if you see permissions error.');
     }
   };
 
@@ -66,10 +68,12 @@ const Subjects = () => {
         classes: editingSubject.classes,
         description: editingSubject.description || ''
       });
+      alert('✅ Subject updated successfully!');
       setEditingSubject(null);
       fetchSubjects();
     } catch (error) {
       console.error("Error updating subject: ", error);
+      alert('❌ Failed to update subject: ' + error.message);
     }
   };
 
@@ -80,6 +84,7 @@ const Subjects = () => {
         fetchSubjects();
       } catch (error) {
         console.error("Error deleting subject: ", error);
+        alert('❌ Failed to delete subject: ' + error.message);
       }
     }
   };

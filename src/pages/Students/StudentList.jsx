@@ -54,10 +54,12 @@ const StudentList = () => {
           studentId: `STU${Math.floor(1000 + Math.random() * 9000)}`
         });
       }
+      alert('✅ Student saved successfully!');
       closeModal();
       fetchStudents();
     } catch (error) {
       console.error("Error saving student: ", error);
+      alert('❌ Failed to save student: ' + error.message + '\n\nIf you see "Missing or insufficient permissions", please update your Firestore Security Rules in the Firebase Console.');
     }
   };
 
@@ -113,6 +115,7 @@ const StudentList = () => {
         fetchStudents();
       } catch (error) {
         console.error("Error deleting student: ", error);
+        alert('❌ Failed to delete student: ' + error.message);
       }
     }
   };
